@@ -25,6 +25,8 @@ linters-settings:
     line-length: 140
   misspell:
     locale: UK
+    ignore-words:
+      - fiber
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
