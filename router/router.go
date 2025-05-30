@@ -92,6 +92,9 @@ func (r *router) register() {
 		ReadinessProbe: r.healthcheckProbe,
 	}))
 	r.app.Get("/metrics", r.metrics())
+
+	// Temporal endpoints
+	r.app.Post("/decode", r.codecDecode)
 }
 
 type Config struct {
