@@ -1,0 +1,20 @@
+{
+  "template": "https://github.com/mrsimonemms/new",
+  "commit": "b75b892063ef69dd37d1b48040f2dd2125292b71",
+  "checkout": "main",
+  "context": {
+    "cookiecutter": {
+      "project_name": "temporal-codec-server",
+      "description": "Decrypt your Temporal data",
+      "author": "Simon Emms <simon@simonemms.com>",
+      "repo": "github.com/mrsimonemms/temporal-codec-server",
+      "use_viper": false,
+      "_template": "https://github.com/mrsimonemms/new",
+      "_commit": "b75b892063ef69dd37d1b48040f2dd2125292b71"
+    }
+  },
+  "directory": "golang-cobra",
+  "skip": [
+    ".git"
+  ]
+}
