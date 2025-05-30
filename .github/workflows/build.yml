@@ -41,6 +41,9 @@ jobs:
         with:
           python-version: 3.x
 
+      - name: Install Swaggo
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
       - name: Install dependencies
         run: go install ./...
 
@@ -138,6 +141,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '>=1.20.0'
+
+      - name: Install Swaggo
+        if: steps.branch-name.outputs.is_tag == 'true'
+        run: go install github.com/swaggo/swag/cmd/swag@latest
 
       - name: Run GoReleaser
         if: steps.branch-name.outputs.is_tag == 'true'

@@ -14,22 +14,34 @@
  * limitations under the License.
  */
 
+//go:generate swag init --output ../docs -g router.go --parseDependency --parseInternal
+
 package router
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/gofiber/swagger"
 	"github.com/rs/zerolog/log"
+
+	_ "github.com/mrsimonemms/temporal-codec-server/docs"
 )
 
 type router struct {
 	app *fiber.App
+	cfg Config
 }
 
+// @title Temporal Codec Server
+// @version 1.0
+// @description Decrypt your Temporal data
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @BasePath /
+// @contact.name Simon Emms
+// @contact.url https://github.com/mrsimonemms/temporal-codec-server
 func (r *router) register() {
 	// ################################ //
 	// Configure the web app's settings //
@@ -58,17 +70,27 @@ func (r *router) register() {
 	// Register the routes //
 	// ################### //
 
+	if !r.cfg.DisableSwagger {
+		log.Debug().Msg("Adding Swagger endpoints")
+		r.app.Get("api/*", swagger.HandlerDefault)
+	}
+
 	// Health and observability checks
 	r.app.Use(healthcheck.New(healthcheck.Config{
 		LivenessProbe:  r.healthcheckProbe,
 		ReadinessProbe: r.healthcheckProbe,
 	}))
-	r.app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
+	r.app.Get("/metrics", r.metrics())
 }
 
-func New(app *fiber.App) *router {
+type Config struct {
+	DisableSwagger bool
+}
+
+func New(app *fiber.App, cfg Config) *router {
 	r := &router{
 		app: app,
+		cfg: cfg,
 	}
 
 	r.register()

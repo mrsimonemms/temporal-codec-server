@@ -24,7 +24,9 @@ ENV PROJECT_NAME="${PROJECT_NAME}"
 USER 1000
 WORKDIR /go/app
 COPY --chown=1000:1000 . .
-RUN go build \
+RUN go install github.com/swaggo/swag/cmd/swag@latest \
+  && go generate ./... \
+  && go build \
   -ldflags \
   "-w -s -X $GIT_REPO/cmd.Version=$VERSION -X $GIT_REPO/cmd.GitCommit=$GIT_COMMIT" \
   -o /go/bin/app
