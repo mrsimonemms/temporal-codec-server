@@ -20,6 +20,7 @@ package router
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
@@ -66,6 +67,16 @@ func (r *router) register() {
 		// Allow recovery from "panic"
 		Use(recover.New())
 
+	if !r.cfg.DisableCORS {
+		// Enable CORS configuration
+		log.Debug().Msg("Enabling CORS")
+		r.app.Use(cors.New(cors.Config{
+			AllowCredentials: r.cfg.CORSAllowCreds,
+			AllowHeaders:     "Authorization,Content-Type,X-Namespace",
+			AllowOrigins:     r.cfg.CORSOrigins,
+		}))
+	}
+
 	// ################### //
 	// Register the routes //
 	// ################### //
@@ -84,6 +95,9 @@ func (r *router) register() {
 }
 
 type Config struct {
+	CORSAllowCreds bool
+	CORSOrigins    string
+	DisableCORS    bool
 	DisableSwagger bool
 }
 
