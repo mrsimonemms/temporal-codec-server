@@ -97,16 +97,18 @@ func (r *router) register() {
 	r.app.Get("/metrics", r.metrics())
 
 	// Temporal endpoints
-	r.app.Use(func(c *fiber.Ctx) error {
-		log := c.Locals("logger").(zerolog.Logger).With().Dur("delay", r.cfg.Pause).Logger()
+	r.app.
+		Use(func(c *fiber.Ctx) error {
+			log := c.Locals("logger").(zerolog.Logger).With().Dur("delay", r.cfg.Pause).Logger()
 
-		if r.cfg.Pause > 0 {
-			log.Debug().Msg("Pausing before resolving endpoints")
-			time.Sleep(r.cfg.Pause)
-			log.Debug().Msg("Pause ending")
-		}
-		return c.Next()
-	})
+			if r.cfg.Pause > 0 {
+				log.Debug().Msg("Pausing before resolving endpoints")
+				time.Sleep(r.cfg.Pause)
+				log.Debug().Msg("Pause ending")
+			}
+			return c.Next()
+		}).
+		Use(MiddlewareAuthConditional(r.cfg.EnableAuth))
 
 	r.app.Post("/decode", r.codecDecode)
 }
@@ -114,6 +116,7 @@ func (r *router) register() {
 type Config struct {
 	CORSAllowCreds bool
 	CORSOrigins    string
+	EnableAuth     bool
 	DisableCORS    bool
 	DisableSwagger bool
 	Pause          time.Duration

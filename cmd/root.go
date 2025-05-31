@@ -33,6 +33,7 @@ import (
 var rootOpts struct {
 	CORSAllowCreds bool
 	CORSOrigins    string
+	DisableAuth    bool
 	DisableCORS    bool
 	DisableSwagger bool
 	Host           string
@@ -65,6 +66,7 @@ var rootCmd = &cobra.Command{
 		router.New(app, router.Config{
 			CORSAllowCreds: rootOpts.CORSAllowCreds,
 			CORSOrigins:    rootOpts.CORSOrigins,
+			EnableAuth:     !rootOpts.DisableAuth,
 			DisableCORS:    rootOpts.DisableCORS,
 			DisableSwagger: rootOpts.DisableSwagger,
 			Pause:          rootOpts.Pause,
@@ -138,6 +140,7 @@ func init() {
 		bindEnv[string]("cors-origins", "https://cloud.temporal.io"),
 		"Configure the CORS Access-Control-Allow-Origin header",
 	)
+	rootCmd.Flags().BoolVar(&rootOpts.DisableAuth, "disable-auth", bindEnv[bool]("disable-auth", false), "Disable endpoint authorization")
 	rootCmd.Flags().BoolVar(&rootOpts.DisableCORS, "disable-cors", bindEnv[bool]("disable-cors", false), "Disable CORS")
 	rootCmd.Flags().BoolVar(&rootOpts.DisableSwagger, "disable-swagger", bindEnv[bool]("disable-swagger", false), "Disable Swagger endpoint")
 	rootCmd.Flags().StringVarP(&rootOpts.Host, "host", "H", bindEnv[string]("host", ""), "Server listen host")
