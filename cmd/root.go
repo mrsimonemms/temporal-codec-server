@@ -123,8 +123,18 @@ func init() {
 		fmt.Sprintf("log level: %s", "Set log level"),
 	)
 
-	rootCmd.Flags().BoolVar(&rootOpts.CORSAllowCreds, "cors-allow-creds", bindEnv[bool]("cors-allow-creds", true), "Configure the CORS Access-Control-Allow-Credentials header")
-	rootCmd.Flags().StringVar(&rootOpts.CORSOrigins, "cors-origins", bindEnv[string]("cors-origins", "https://cloud.temporal.io"), "Configure the CORS Access-Control-Allow-Origin header")
+	rootCmd.Flags().BoolVar(
+		&rootOpts.CORSAllowCreds,
+		"cors-allow-creds",
+		bindEnv[bool]("cors-allow-creds", true),
+		"Configure the CORS Access-Control-Allow-Credentials header",
+	)
+	rootCmd.Flags().StringVar(
+		&rootOpts.CORSOrigins,
+		"cors-origins",
+		bindEnv[string]("cors-origins", "https://cloud.temporal.io"),
+		"Configure the CORS Access-Control-Allow-Origin header",
+	)
 	rootCmd.Flags().BoolVar(&rootOpts.DisableCORS, "disable-cors", bindEnv[bool]("disable-cors", false), "Disable CORS")
 	rootCmd.Flags().BoolVar(&rootOpts.DisableSwagger, "disable-swagger", bindEnv[bool]("disable-swagger", false), "Disable Swagger endpoint")
 	rootCmd.Flags().StringVarP(&rootOpts.Host, "host", "H", bindEnv[string]("host", ""), "Server listen host")
