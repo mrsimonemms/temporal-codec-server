@@ -31,9 +31,10 @@ import (
 )
 
 var rootOpts struct {
-	Host     string
-	LogLevel string
-	Port     int
+	DisableSwagger bool
+	Host           string
+	LogLevel       string
+	Port           int
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -57,7 +58,9 @@ var rootCmd = &cobra.Command{
 			ErrorHandler:          fiberErrorHandler,
 		})
 
-		router.New(app)
+		router.New(app, router.Config{
+			EnableSwagger: !rootOpts.DisableSwagger,
+		})
 
 		addr := fmt.Sprintf("%s:%d", rootOpts.Host, rootOpts.Port)
 		log.Info().Str("address", addr).Msg("Starting server")
@@ -115,6 +118,12 @@ func init() {
 		fmt.Sprintf("log level: %s", "Set log level"),
 	)
 
+	rootCmd.Flags().BoolVar(
+		&rootOpts.DisableSwagger,
+		"disable-swagger",
+		bindEnv[bool]("disable-swagger", false),
+		"Disable Swagger endpoint",
+	)
 	rootCmd.Flags().StringVarP(&rootOpts.Host, "host", "H", bindEnv[string]("host", ""), "Server listen host")
 	rootCmd.Flags().IntVarP(&rootOpts.Port, "port", "p", bindEnv[int]("port", 3000), "Server listen port")
 }

@@ -24,5 +24,9 @@
   },
   "containerEnv": {
     "GIT_REPO": "github.com/mrsimonemms/temporal-codec-server"
+  },
+  "postStartCommand": {
+    "installAir": "go install github.com/air-verse/air@latest",
+    "installSwaggo": "go install github.com/swaggo/swag/cmd/swag@latest"
   }
 }

@@ -183,6 +183,14 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: "Go: Install Swaggo"
+        if: steps.lang.outputs.lang == 'go'
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: "Go: Generate"
+        if: steps.lang.outputs.lang == 'go'
+        run: go generate ./...
+
       - name: "Go: Run tests"
         if: steps.lang.outputs.lang == 'go'
         run: go vet -v ./...
