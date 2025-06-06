@@ -19,11 +19,14 @@
 package router
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/swagger"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	_ "github.com/mrsimonemms/temporal-codec-server/apps/server/docs"
@@ -83,11 +86,22 @@ func (r *router) register() {
 	r.app.Get("/metrics", r.metrics())
 
 	// Temporal endpoints
+	r.app.Use(func(c *fiber.Ctx) error {
+		log := c.Locals("logger").(zerolog.Logger).With().Dur("delay", r.cfg.Pause).Logger()
+
+		if r.cfg.Pause > 0 {
+			log.Debug().Msg("Pausing before resolving endpoints")
+			time.Sleep(r.cfg.Pause)
+			log.Debug().Msg("Pause ending")
+		}
+		return c.Next()
+	})
 	r.app.Post("/decode", r.codecDecode)
 }
 
 type Config struct {
 	EnableSwagger bool
+	Pause         time.Duration
 }
 
 func New(app *fiber.App, cfg Config) *router {

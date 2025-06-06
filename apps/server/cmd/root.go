@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/mrsimonemms/temporal-codec-server/apps/server/router"
@@ -34,6 +35,7 @@ var rootOpts struct {
 	DisableSwagger bool
 	Host           string
 	LogLevel       string
+	Pause          time.Duration
 	Port           int
 }
 
@@ -60,6 +62,7 @@ var rootCmd = &cobra.Command{
 
 		router.New(app, router.Config{
 			EnableSwagger: !rootOpts.DisableSwagger,
+			Pause:         rootOpts.Pause,
 		})
 
 		addr := fmt.Sprintf("%s:%d", rootOpts.Host, rootOpts.Port)
@@ -126,6 +129,12 @@ func init() {
 	)
 	rootCmd.Flags().StringVarP(&rootOpts.Host, "host", "H", bindEnv[string]("host", ""), "Server listen host")
 	rootCmd.Flags().IntVarP(&rootOpts.Port, "port", "p", bindEnv[int]("port", 3000), "Server listen port")
+	rootCmd.Flags().DurationVar(
+		&rootOpts.Pause,
+		"pause",
+		bindEnv[time.Duration]("pause", time.Nanosecond*0),
+		"Artificial pause before encoding and decoding endpoints are resolved",
+	)
 }
 
 func bindEnv[T any](key string, defaultValue ...any) T {
