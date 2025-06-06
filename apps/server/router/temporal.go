@@ -25,6 +25,17 @@ import (
 	"go.temporal.io/sdk/converter"
 )
 
+// Define the types for Swagger
+type Payloads struct {
+	Payloads []Payload `json:"payloads"`
+}
+
+// Define the types for Swagger
+type Payload struct {
+	Metadata map[string]string `json:"metadata" example:"encoding:YmluYXJ5L3NuYXBweQ=="`
+	Data     string            `json:"data" example:"NdAKFgoIZW5jb2RpbmcSCmpzb24vcGxhaW4SGyJSZWNlaXZlZCBQbGFpbiB0ZXh0IGlucHV0Ig=="`
+}
+
 // Decrypt your Temporal data godoc
 // @Summary		Decode Temporal data
 // @Description Decrypt your encrypted Temporal data
@@ -33,6 +44,8 @@ import (
 // @Produce		json
 // @Success		200	{string} OK
 // @Router		/decode [post]
+// @Param		payload	body	Payloads	true	"Encrypted payload data"Add commentMore actions
+// @Success		200	{object}	Payloads
 func (r *router) codecDecode(c *fiber.Ctx) error {
 	encoders := map[string][]converter.PayloadCodec{
 		"default": {golang.NewPayloadCodec()},
