@@ -32,6 +32,9 @@ import (
 )
 
 var rootOpts struct {
+	CORSAllowCreds bool
+	CORSOrigins    string
+	DisableCORS    bool
 	DisableSwagger bool
 	Host           string
 	LogLevel       string
@@ -61,8 +64,11 @@ var rootCmd = &cobra.Command{
 		})
 
 		router.New(app, router.Config{
-			EnableSwagger: !rootOpts.DisableSwagger,
-			Pause:         rootOpts.Pause,
+			CORSAllowCreds: rootOpts.CORSAllowCreds,
+			CORSOrigins:    rootOpts.CORSOrigins,
+			EnableCORS:     !rootOpts.DisableCORS,
+			EnableSwagger:  !rootOpts.DisableSwagger,
+			Pause:          rootOpts.Pause,
 		})
 
 		addr := fmt.Sprintf("%s:%d", rootOpts.Host, rootOpts.Port)
@@ -121,6 +127,24 @@ func init() {
 		fmt.Sprintf("log level: %s", "Set log level"),
 	)
 
+	rootCmd.Flags().BoolVar(
+		&rootOpts.CORSAllowCreds,
+		"cors-allow-creds",
+		bindEnv[bool]("cors-allow-creds", true),
+		"Configure the CORS Access-Control-Allow-Credentials header",
+	)
+	rootCmd.Flags().StringVar(
+		&rootOpts.CORSOrigins,
+		"cors-origins",
+		bindEnv[string]("cors-origins", "https://cloud.temporal.io"),
+		"Configure the CORS Access-Control-Allow-Origin header. Accepts comma-separated values and can use wildcards",
+	)
+	rootCmd.Flags().BoolVar(
+		&rootOpts.DisableCORS,
+		"disable-cors",
+		bindEnv[bool]("disable-cors", false),
+		"Disable CORS",
+	)
 	rootCmd.Flags().BoolVar(
 		&rootOpts.DisableSwagger,
 		"disable-swagger",
