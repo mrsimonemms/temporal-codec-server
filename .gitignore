@@ -1,0 +1,23 @@
+dist
+tmp
+
+node_modules
+
+.idea
+.DS_Store
+Thumbs.db
+.commit
+.devbox
+.envrc
+go.work.sum
+
+######################
+## gRPC conventions ##
+######################
+
+# Go-generated files
+**/*.pb.go
+# TypeScript-generated gRPC files
+**/*/src/interfaces
+# Avoid duplication from Docker Compose volumes
+**/*/proto

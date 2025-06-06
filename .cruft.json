@@ -1,0 +1,19 @@
+{
+  "template": "https://github.com/mrsimonemms/new",
+  "commit": "b4fee0623066d045e1435825e48f2a77b0648d2b",
+  "checkout": "main",
+  "context": {
+    "cookiecutter": {
+      "project_name": "temporal-codec-server",
+      "description": "Encrypt and decrypt your Temporal data",
+      "author": "Simon Emms <simon@simonemms.com>",
+      "repo": "github.com/mrsimonemms/temporal-codec-server",
+      "_template": "https://github.com/mrsimonemms/new",
+      "_commit": "b4fee0623066d045e1435825e48f2a77b0648d2b"
+    }
+  },
+  "directory": "monorepo",
+  "skip": [
+    ".git"
+  ]
+}

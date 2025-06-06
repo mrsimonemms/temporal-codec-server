@@ -1,0 +1,29 @@
+services:
+  ########################
+  # Third-party services #
+  ########################
+  gobblr:
+    image: ghcr.io/mrsimonemms/gobblr
+    environment:
+      GOBBLR_DATABASE: app
+      GOBBLR_HOST: mysql
+      GOBBLR_PASSWORD: password
+      GOBBLR_USERNAME: app
+    ports:
+      - 4001:5670
+    links:
+      - mysql
+    volumes:
+      - ./dev/data:/app/data
+    restart: on-failure
+    command: db sql mysql --run
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: app
+      MYSQL_RANDOM_ROOT_PASSWORD: "true"
+      MYSQL_PASSWORD: password
+      MYSQL_USER: app
+    ports:
+      - 4000:3306

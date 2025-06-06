@@ -1,0 +1,315 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+permissions:
+  contents: write
+  packages: write
+  pull-requests: read
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # fetch-depth is required
+
+      - uses: wagoid/commitlint-github-action@v6
+
+  list_components:
+    runs-on: ubuntu-latest
+    outputs:
+      all: '${{ steps.list.outputs.all }}'
+      apps: '${{ steps.list.outputs.apps }}'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filtered
+        with:
+          list-files: json
+          filters: |
+            apps:
+              - apps/**/*
+            all:
+              - apps/**/*
+              - packages/**/*
+
+      - name: List components
+        id: list
+        run: |
+          touch /tmp/all.yaml
+          touch /tmp/apps.yaml
+
+          all='${{ steps.filtered.outputs.all_files }}'
+          for row in $(echo $all | jq -r '.[] | @base64'); do
+            d=$(echo $row | base64 -d)
+            f=$(echo "${d}" | awk -F/ '{print $1 "/" $2}')
+            if [[ -d $f ]]; then
+              echo "- ${f}" >> /tmp/all.yaml
+            fi
+          done
+          yq -i 'unique' /tmp/all.yaml || echo "[]" > /tmp/all.yaml
+
+          apps='${{ steps.filtered.outputs.apps_files }}'
+          for row in $(echo $apps | jq -r '.[] | @base64'); do
+            d=$(echo $row | base64 -d)
+            full=$(echo "${d}" | awk -F/ '{print $1 "/" $2}')
+            f=$(echo "${d}" | awk -F/ '{print "- " $2}')
+            if [[ -d $full ]]; then
+              echo ${f} >> /tmp/apps.yaml
+            fi
+          done
+          yq -i 'unique' /tmp/apps.yaml || echo "[]" > /tmp/apps.yaml
+
+          echo "all={\"component\":$(cat /tmp/all.yaml | yq -o json -I 0)}" >> "$GITHUB_OUTPUT"
+          echo "apps={\"component\":$(cat /tmp/apps.yaml | yq -o json -I 0)}" >> "$GITHUB_OUTPUT"
+
+          echo "All changed directories:"
+          cat /tmp/all.yaml
+
+          echo "App changes:"
+          cat /tmp/apps.yaml
+
+      - name: "Go: Set up"
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: "JS: Setup"
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install Buf
+        uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+
+      - name: Install protoc-gen-go
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+      # Node modules is already cached and makes artifact upload slow
+      - name: Install and build dependencies
+        run: |
+          make install generate-grpc copy-proto
+          rm -Rf apps/**/node_modules
+          rm -Rf packages/**/node_modules
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apps-proto
+          path: apps/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-proto
+          path: packages/
+
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # fetch-depth is required
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Set up JS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install dependencies
+        run: |
+          go install ./... || true
+          npm ci || true
+
+      - uses: pre-commit/action@v3.0.1
+
+  test:
+    runs-on: ubuntu-latest
+    needs:
+      - list_components
+    if: ${{ needs.list_components.outputs.all != '' && toJson(fromJson(needs.list_components.outputs.all).component) != '[]' }}
+    strategy:
+      fail-fast: true
+      matrix: '${{ fromJson(needs.list_components.outputs.all) }}'
+    defaults:
+      run:
+        working-directory: './${{ matrix.component }}'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: apps-proto
+          path: apps
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: packages-proto
+          path: packages
+
+      - name: Detect component language
+        id: lang
+        run: |
+          if [ -f "./main.go" ]; then
+            echo "lang=go" >> "$GITHUB_OUTPUT"
+          elif [ -f "./package.json" ]; then
+            echo "lang=js" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Golang checks
+      - name: "Go: Set up"
+        if: steps.lang.outputs.lang == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: "Go: Run tests"
+        if: steps.lang.outputs.lang == 'go'
+        run: go vet -v ./...
+
+      - name: "Go: Run tests"
+        if: steps.lang.outputs.lang == 'go'
+        run: go test -v ./...
+
+      - name: golangci-lint
+        if: steps.lang.outputs.lang == 'go'
+        uses: golangci/golangci-lint-action@v6
+
+      # JS checks
+      - name: "JS: Setup"
+        if: steps.lang.outputs.lang == 'js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: "JS: Install and test"
+        if: steps.lang.outputs.lang == 'js'
+        run: |
+          npm ci
+          npm run lint
+          npm test
+
+  build:
+    runs-on: ubuntu-latest
+    needs:
+      - commitlint
+      - list_components
+      - pre-commit
+      - test
+    if: ${{ needs.list_components.outputs.apps != '' && toJson(fromJson(needs.list_components.outputs.apps).component) != '[]' }}
+    strategy:
+      fail-fast: true
+      matrix: '${{ fromJson(needs.list_components.outputs.apps) }}'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: apps-proto
+          path: apps
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: packages-proto
+          path: packages
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: '${{ github.actor }}'
+          password: '${{ secrets.GITHUB_TOKEN }}'
+
+      - name: Get branch names
+        id: branch-name
+        uses: tj-actions/branch-names@v8
+        with:
+          strip_tag_prefix: v
+
+      - name: Generate Docker tag
+        id: docker
+        run: |
+          IMG_NAME="ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.component }}"
+
+          if [ "${{ steps.branch-name.outputs.is_tag }}" = "true"  ];
+          then
+            # Latest tag
+            IMG_AND_TAG_NAME="${IMG_NAME}:latest"
+            # Tag name (usually vX.Y.Z)
+            IMG_AND_TAG_NAME="${IMG_AND_TAG_NAME},${IMG_NAME}:${{ steps.branch-name.outputs.tag }}"
+
+            echo "image_name=${IMG_NAME}" >> "$GITHUB_OUTPUT"
+            echo "platforms=linux/amd64,linux/arm64" >> "$GITHUB_OUTPUT"
+            echo "push=true" >> "$GITHUB_OUTPUT"
+            echo "version=${{ steps.branch-name.outputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            # Use "branch-<branch>" naming convention
+            TAG="branch-${{ steps.branch-name.outputs.current_branch }}"
+            # Change "/" for "-"
+            TAG="${TAG//\//-}"
+            # Set to lowercase
+            TAG="${TAG,,}"
+
+            echo "image_name=${IMG_NAME}:${TAG}" >> "$GITHUB_OUTPUT"
+            echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
+            echo "push=${{ github.ref == 'refs/heads/main' }}" >> "$GITHUB_OUTPUT"
+            echo "version=development" >> "$GITHUB_OUTPUT"
+          fi
+
+          DOCKERFILE=""
+          if [ -f "./apps/${{ matrix.component }}/Dockerfile" ]; then
+            # Dockerfile exists in app - use that
+            DOCKERFILE="./apps/${{ matrix.component }}/Dockerfile"
+          elif [ -f "./apps/${{ matrix.component }}/.build.yaml" ]; then
+            # Get the Dockerfile from the .build.yaml file
+            f=$(cat "./apps/${{ matrix.component }}/.build.yaml" | yq '.dockerfile')
+            DOCKERFILE="./apps/${{ matrix.component }}/${f}"
+          else
+            echo "No Dockerfile or .build.yaml file exists in ${{ matrix.component }}"
+            exit 1
+          fi
+
+          echo "commit_id=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "container_tagged_image=${IMG_NAME}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "dockerfile=${DOCKERFILE}" >> "$GITHUB_OUTPUT"
+          echo "gitRepo=github.com/${GITHUB_REPOSITORY}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          build-args: |
+            APP=${{ matrix.component }}
+            GIT_COMMIT=${{ steps.docker.outputs.commit_id }}
+            GIT_REPO=${{ steps.docker.outputs.gitRepo }}
+            VERSION=${{ steps.docker.outputs.version }}
+          context: .
+          file: ${{ steps.docker.outputs.dockerfile }}
+          platforms: ${{ steps.docker.outputs.platforms }}
+          push: ${{ steps.docker.outputs.push }}
+          tags: ${{ steps.docker.outputs.image_name }},${{ steps.docker.outputs.container_tagged_image }}
