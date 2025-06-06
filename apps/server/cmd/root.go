@@ -17,17 +17,23 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/gofiber/fiber/v2"
+	"github.com/mrsimonemms/temporal-codec-server/apps/server/router"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var rootOpts struct {
+	Host     string
 	LogLevel string
+	Port     int
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -44,6 +50,51 @@ var rootCmd = &cobra.Command{
 
 		return nil
 	},
+	Run: func(cmd *cobra.Command, args []string) {
+		app := fiber.New(fiber.Config{
+			AppName:               "temporal-codec-server",
+			DisableStartupMessage: true,
+			ErrorHandler:          fiberErrorHandler,
+		})
+
+		router.New(app)
+
+		addr := fmt.Sprintf("%s:%d", rootOpts.Host, rootOpts.Port)
+		log.Info().Str("address", addr).Msg("Starting server")
+
+		if err := app.Listen(addr); err != nil {
+			log.Fatal().Err(err).Msg("Error starting server")
+		}
+	},
+}
+
+func fiberErrorHandler(c *fiber.Ctx, err error) error {
+	code := fiber.StatusInternalServerError
+
+	var output any
+	var e *fiber.Error
+
+	if errors.As(err, &e) {
+		code = e.Code
+		output = e
+	}
+
+	if code >= 500 && code < 600 {
+		// Log as developer error
+		log.Error().Err(err).Msg("Error")
+	} else {
+		// Log as human error
+		log.Debug().Err(err).Msg(e.Message)
+	}
+
+	// Render the error as JSON
+	err = c.Status(code).JSON(output)
+	if err != nil {
+		log.Error().Err(err).Msg("Error rendering web output")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.ErrInternalServerError)
+	}
+
+	return nil
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -63,6 +114,9 @@ func init() {
 		bindEnv[string]("log-level", zerolog.InfoLevel.String()),
 		fmt.Sprintf("log level: %s", "Set log level"),
 	)
+
+	rootCmd.Flags().StringVarP(&rootOpts.Host, "host", "H", bindEnv[string]("host", ""), "Server listen host")
+	rootCmd.Flags().IntVarP(&rootOpts.Port, "port", "p", bindEnv[int]("port", 3000), "Server listen port")
 }
 
 func bindEnv[T any](key string, defaultValue ...any) T {
