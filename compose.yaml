@@ -8,6 +8,7 @@ services:
         APP: server
     environment:
       CORS_ORIGINS: http://localhost:8233
+      KEYS_PATH: /go/root/apps/server/keys.example.json
     ports:
       - 3000:3000
     restart: on-failure

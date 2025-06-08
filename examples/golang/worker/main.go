@@ -18,18 +18,25 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"golang"
 
-	"github.com/mrsimonemms/temporal-codec-server/packages/golang/algorithms/snappy"
+	"github.com/mrsimonemms/temporal-codec-server/packages/golang/algorithms/aes"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 )
 
 func main() {
+	// Get the encryption keys
+	keys, err := aes.ReadKeyFile(os.Getenv("KEYS_PATH"))
+	if err != nil {
+		log.Fatalln("Unable to get keys from file", err)
+	}
+
 	// The client and worker are heavyweight objects that should be created once per process.
 	c, err := client.Dial(client.Options{
-		DataConverter: snappy.DataConverter,
+		DataConverter: aes.DataConverter(keys),
 	})
 	if err != nil {
 		log.Fatalln("Unable to create client", err)

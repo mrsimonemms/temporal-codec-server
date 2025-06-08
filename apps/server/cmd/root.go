@@ -25,21 +25,24 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/mrsimonemms/temporal-codec-server/apps/server/router"
+	"github.com/mrsimonemms/temporal-codec-server/packages/golang/algorithms/aes"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.temporal.io/sdk/converter"
 )
 
 var rootOpts struct {
-	CORSAllowCreds bool
-	CORSOrigins    string
-	DisableCORS    bool
-	DisableSwagger bool
-	Host           string
-	LogLevel       string
-	Pause          time.Duration
-	Port           int
+	CORSAllowCreds     bool
+	CORSOrigins        string
+	DisableCORS        bool
+	DisableSwagger     bool
+	EncryptionKeysPath string
+	Host               string
+	LogLevel           string
+	Pause              time.Duration
+	Port               int
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -57,6 +60,17 @@ var rootCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		// Get the encryption keys
+		keys, err := aes.ReadKeyFile(rootOpts.EncryptionKeysPath)
+		if err != nil {
+			log.Fatal().Err(err).Str("file path", rootOpts.EncryptionKeysPath).Msg("Unable to get keys from file")
+		}
+
+		// Create the encoders map for each namespace
+		encoders := map[string][]converter.PayloadCodec{
+			"default": {aes.NewPayloadCodec(keys)},
+		}
+
 		app := fiber.New(fiber.Config{
 			AppName:               "temporal-codec-server",
 			DisableStartupMessage: true,
@@ -68,6 +82,7 @@ var rootCmd = &cobra.Command{
 			CORSOrigins:    rootOpts.CORSOrigins,
 			EnableCORS:     !rootOpts.DisableCORS,
 			EnableSwagger:  !rootOpts.DisableSwagger,
+			Encoders:       encoders,
 			Pause:          rootOpts.Pause,
 		})
 
@@ -150,6 +165,12 @@ func init() {
 		"disable-swagger",
 		bindEnv[bool]("disable-swagger", false),
 		"Disable Swagger endpoint",
+	)
+	rootCmd.Flags().StringVar(
+		&rootOpts.EncryptionKeysPath,
+		"keys-path",
+		bindEnv[string]("keys-path", ""),
+		"Path of JSON file for encryption keys in key/value format",
 	)
 	rootCmd.Flags().StringVarP(&rootOpts.Host, "host", "H", bindEnv[string]("host", ""), "Server listen host")
 	rootCmd.Flags().IntVarP(&rootOpts.Port, "port", "p", bindEnv[int]("port", 3000), "Server listen port")
