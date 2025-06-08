@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package golang
+package snappy
 
 import (
 	"github.com/golang/snappy"
@@ -24,9 +24,9 @@ import (
 
 var DataConverter = NewDataConverter(converter.GetDefaultDataConverter())
 
-type Codec struct{}
+type codec struct{}
 
-func (*Codec) Decode(payloads []*commonpb.Payload) ([]*commonpb.Payload, error) {
+func (*codec) Decode(payloads []*commonpb.Payload) ([]*commonpb.Payload, error) {
 	result := make([]*commonpb.Payload, len(payloads))
 	for i, p := range payloads {
 		// Only if it's our encoding
@@ -50,7 +50,7 @@ func (*Codec) Decode(payloads []*commonpb.Payload) ([]*commonpb.Payload, error) 
 	return result, nil
 }
 
-func (e *Codec) Encode(payloads []*commonpb.Payload) ([]*commonpb.Payload, error) {
+func (e *codec) Encode(payloads []*commonpb.Payload) ([]*commonpb.Payload, error) {
 	result := make([]*commonpb.Payload, len(payloads))
 	for i, p := range payloads {
 		// Marshal proto
@@ -70,7 +70,7 @@ func (e *Codec) Encode(payloads []*commonpb.Payload) ([]*commonpb.Payload, error
 }
 
 func NewPayloadCodec() converter.PayloadCodec {
-	return &Codec{}
+	return &codec{}
 }
 
 // NewDataConverter creates a new data converter that wraps the converter
