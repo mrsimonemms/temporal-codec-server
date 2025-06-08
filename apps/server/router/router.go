@@ -29,6 +29,7 @@ import (
 	"github.com/gofiber/swagger"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"go.temporal.io/sdk/converter"
 
 	_ "github.com/mrsimonemms/temporal-codec-server/apps/server/docs"
 )
@@ -119,6 +120,7 @@ type Config struct {
 	CORSOrigins    string
 	EnableCORS     bool
 	EnableSwagger  bool
+	Encoders       map[string][]converter.PayloadCodec
 	Pause          time.Duration
 }
 
