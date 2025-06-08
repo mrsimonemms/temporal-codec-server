@@ -22,14 +22,14 @@ import (
 
 	"golang"
 
-	temporal "github.com/mrsimonemms/temporal-codec-server/packages/golang"
+	"github.com/mrsimonemms/temporal-codec-server/packages/golang/algorithms/snappy"
 	"go.temporal.io/sdk/client"
 )
 
 func main() {
 	// The client is a heavyweight object that should be created once per process.
 	c, err := client.Dial(client.Options{
-		DataConverter: temporal.DataConverter,
+		DataConverter: snappy.DataConverter,
 	})
 	if err != nil {
 		log.Fatalln("Unable to create client", err)

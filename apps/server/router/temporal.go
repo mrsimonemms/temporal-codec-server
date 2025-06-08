@@ -21,7 +21,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
-	"github.com/mrsimonemms/temporal-codec-server/packages/golang"
+	"github.com/mrsimonemms/temporal-codec-server/packages/golang/algorithms/snappy"
 	"go.temporal.io/sdk/converter"
 )
 
@@ -48,7 +48,7 @@ type Payload struct {
 // @Success		200	{object}	Payloads
 func (r *router) codecDecode(c *fiber.Ctx) error {
 	encoders := map[string][]converter.PayloadCodec{
-		"default": {golang.NewPayloadCodec()},
+		"default": {snappy.NewPayloadCodec()},
 	}
 
 	codecHandlers := make(map[string]http.Handler, len(encoders))
