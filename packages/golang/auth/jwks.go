@@ -24,29 +24,54 @@ import (
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/hashicorp/golang-lru/v2/expirable"
 )
+
+var cache *expirable.LRU[string, []byte]
+
+func init() {
+	// Create the cache
+	cache = expirable.NewLRU[string, []byte](5, nil, time.Minute*30)
+}
+
+func cachedHTTPGet(url string) ([]byte, error) {
+	body, ok := cache.Get(url)
+	if ok {
+		return body, nil
+	}
+
+	client := http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving jwks keys: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("jwks response not ok: %w", err)
+	}
+
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading jwks body: %w", err)
+	}
+
+	cache.Add(url, body)
+
+	return body, nil
+}
 
 func TemporalJWKS(token string) error {
 	return JWKS(token, TemporalIssuerURL)
 }
 
 func JWKS(token, jwksURL string) error {
-	client := http.Client{
-		Timeout: 5 * time.Second,
-	}
-	resp, err := client.Get(jwksURL)
+	body, err := cachedHTTPGet(jwksURL)
 	if err != nil {
-		return fmt.Errorf("error retrieving jwks keys: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("jwks response not ok: %w", err)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("error reading jwks body: %w", err)
+		return fmt.Errorf("error getting jwks: %w", err)
 	}
 
 	k, err := keyfunc.NewJWKSetJSON(body)

@@ -6,6 +6,7 @@ require (
 	github.com/MicahParks/keyfunc/v3 v3.4.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/golang/snappy v1.0.0
+	github.com/hashicorp/golang-lru/v2 v2.0.7
 	go.temporal.io/api v1.50.0
 	go.temporal.io/sdk v1.34.0
 )
