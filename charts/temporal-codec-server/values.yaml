@@ -1,0 +1,148 @@
+# Default values for temporal-codec-server.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Number of replicas
+replicaCount: 1
+
+keys:
+  # -- Create the keys secret
+  createSecret: true
+  # -- Encryption keys to use - these are examples to show the format used and should **NOT** be used
+  encryptionKeys:
+    # This is the active key
+    - id: laqcg6jzc3kx
+      key: rgQfsrQKyLGWGoYPbWOn2KfwhdRueoLU
+    # This is an old key
+    - id: 3xkyy9d0a1av
+      key: 54APIwgWHhF0bM365vdocJvXxEQNnw88
+  # -- Use an existing secret to populate the keys
+  existingSecret: ""
+
+config:
+  # -- Allow credentials to be sent through CORS
+  corsAllowCreds: true
+  # -- Origins allowed to use CORS
+  corsOrigins:
+    - https://cloud.temporal.io
+  # -- Disable authentication
+  disableAuth: false
+  # -- Disable CORS
+  disableCors: false
+  # -- Disable Swagger
+  disableSwagger: false
+  # -- Log level
+  logLevel: info
+  # -- Pause before resolving the /decode and /encode endpoints
+  pause: 0s
+
+image:
+  # -- Image repositiory
+  repository: ghcr.io/mrsimonemms/temporal-codec-server/golang
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Image tag - defaults to the chart's `AppVersion` if not set
+  tag: ""
+
+# -- Docker registry secret names
+imagePullSecrets: []
+# -- String to partially override name
+nameOverride: ""
+# -- String to fully override names
+fullnameOverride: ""
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use. If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- Pod [annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
+podAnnotations: {}
+# -- Pod [labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
+podLabels: {}
+
+# -- Pod's [security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context)
+podSecurityContext: {}
+
+# -- Container's security context
+securityContext: {}
+
+service:
+  # -- Service's type
+  type: ClusterIP
+  # -- Service's port
+  port: 3000
+
+ingress:
+  # -- Enable ingress
+  enabled: false
+  # -- Ingress class name, defaulting to [ingress-nginx](https://github.com/kubernetes/ingress-nginx)
+  className: nginx
+  # -- Ingress annotations
+  annotations: {}
+  #   kubernetes.io/tls-acme: "true"
+  #   cert-manager.io/cluster-issuer: letsencrypt
+  # -- Domain to use for incoming requests
+  host: codec.temporal.local
+  # -- Type for the root path
+  pathType: Prefix
+  tls:
+    # -- Enable TLS termination for requests
+    enabled: false
+    # -- Cert-manager cluster issuer - incompatible with `issuer`
+    clusterIssuer: ""
+    # -- Cert-manager issuer - incompatible with `clusterIssuer`
+    issuer: ""
+  # hosts:
+  #   - host: chart-example.local
+  #     paths:
+  #       - path: /
+  #         pathType: ImplementationSpecific
+  # tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+# -- Configure resources available
+resources: {}
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /livez
+    port: http
+readinessProbe:
+  httpGet:
+    path: /livez
+    port: http
+
+autoscaling:
+  # -- Autoscaling enabled
+  enabled: false
+  # -- Minimum replicas
+  minReplicas: 1
+  # -- Maximum replicas
+  maxReplicas: 100
+  # -- When to trigger a new replica
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Additional volumes on the output Deployment definition.
+volumes: []
+
+# -- Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+
+# -- Node selector
+nodeSelector: {}
+
+# -- Node toleration
+tolerations: []
+
+# -- Node affinity
+affinity: {}

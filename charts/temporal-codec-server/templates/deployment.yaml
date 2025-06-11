@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "temporal-codec-server.fullname" . }}
+  labels:
+    {{- include "temporal-codec-server.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "temporal-codec-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "temporal-codec-server.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "temporal-codec-server.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          args:
+            {{- if .Values.config.corsAllowCreds }}
+            - --cors-allow-creds
+            {{- end }}
+            {{- if and (not .Values.config.disableCors) (eq (len .Values.config.corsOrigins) 0) }}
+            {{- fail "At least one CORS origin must be set" }}
+            {{- end }}
+            - --cors-origins
+            - {{ join "," .Values.config.corsOrigins }}
+            {{- if .Values.config.disableAuth }}
+            - --disable-auth
+            {{- end }}
+            {{- if .Values.config.disableCors }}
+            - --disable-cors
+            {{- end }}
+            {{- if .Values.config.disableSwagger }}
+            - --disable-swagger
+            {{- end }}
+            - --keys-path
+            - /etc/keys/encryption-keys
+            - --log-level
+            - {{ .Values.config.logLevel | quote }}
+            - --pause
+            - {{ .Values.config.pause | quote }}
+            - --port
+            - {{ .Values.service.port | quote }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: encryption-keys
+              readOnly: true
+              mountPath: /etc/keys
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: encryption-keys
+          secret:
+            {{- if .Values.keys.createSecret }}
+            secretName: {{ include "temporal-codec-server.fullname" . }}
+            {{- else }}
+            secretName: {{ .Values.keys.existingSecret | quote }}
+            {{- end }}
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
