@@ -19,10 +19,13 @@
 package router
 
 import (
+	"embed"
+	"net/http"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
@@ -33,6 +36,9 @@ import (
 
 	_ "github.com/mrsimonemms/temporal-codec-server/apps/golang/docs"
 )
+
+//go:embed public/*
+var publicDir embed.FS
 
 type router struct {
 	app *fiber.App
@@ -113,6 +119,12 @@ func (r *router) register() {
 		return c.Next()
 	})
 	r.app.Post("/decode", r.codecDecode)
+
+	// Serve data from the public directory - must be last
+	r.app.Use("/", filesystem.New(filesystem.Config{
+		Root:       http.FS(publicDir),
+		PathPrefix: "public",
+	}))
 }
 
 type Config struct {
