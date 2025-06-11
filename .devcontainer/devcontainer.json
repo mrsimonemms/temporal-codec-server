@@ -26,7 +26,7 @@
   "containerEnv": {
     "CORS_ORIGINS": "http://localhost:8233",
     "GIT_REPO": "github.com/mrsimonemms/temporal-codec-server",
-    "KEYS_PATH": "/workspaces/temporal-codec-server/apps/server/keys.example.json"
+    "KEYS_PATH": "/workspaces/temporal-codec-server/apps/golang/keys.example.json"
   },
   "postStartCommand": {
     "installAir": "go install github.com/air-verse/air@latest",

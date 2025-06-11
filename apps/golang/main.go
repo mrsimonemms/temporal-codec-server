@@ -16,7 +16,7 @@
 
 package main
 
-import "github.com/mrsimonemms/temporal-codec-server/apps/server/cmd"
+import "github.com/mrsimonemms/temporal-codec-server/apps/golang/cmd"
 
 func main() {
 	cmd.Execute()

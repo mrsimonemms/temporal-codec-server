@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/mrsimonemms/temporal-codec-server/apps/server/router"
+	"github.com/mrsimonemms/temporal-codec-server/apps/golang/router"
 	"github.com/mrsimonemms/temporal-codec-server/packages/golang/algorithms/aes"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

@@ -1,14 +1,14 @@
 services:
-  server:
+  golang:
     build:
       context: .
-      dockerfile: ./apps/server/Dockerfile
+      dockerfile: ./apps/golang/Dockerfile
       target: dev
       args:
-        APP: server
+        APP: golang
     environment:
       CORS_ORIGINS: http://localhost:8233
-      KEYS_PATH: /go/root/apps/server/keys.example.json
+      KEYS_PATH: /go/root/apps/golang/keys.example.json
     ports:
       - 3000:3000
     restart: on-failure
