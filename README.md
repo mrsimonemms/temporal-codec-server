@@ -1,6 +1,6 @@
 # temporal-codec-server
 
-Encrypt and decrypt your Temporal data
+Encode and decode your Temporal data
 
 <!-- toc -->
 

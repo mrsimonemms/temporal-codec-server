@@ -35,17 +35,18 @@ type Payload struct {
 	Data     string            `json:"data" example:"NdAKFgoIZW5jb2RpbmcSCmpzb24vcGxhaW4SGyJSZWNlaXZlZCBQbGFpbiB0ZXh0IGlucHV0Ig=="`
 }
 
-// Decrypt your Temporal data godoc
-// @Summary		Decode Temporal data
-// @Description Decrypt your encrypted Temporal data
+// Encode and decode your Temporal data godoc
+// @Summary		Encode and decode Temporal data
+// @Description Encode and decode your encrypted Temporal data
 // @Tags		Temporal
 // @Accept		json
 // @Produce		json
 // @Success		200	{string} OK
 // @Router		/decode [post]
-// @Param		payload	body	Payloads	true	"Encrypted payload data"Add commentMore actions
+// @Router		/encode [post]
+// @Param		payload	body	Payloads	true	"Encoded payload data"
 // @Success		200	{object}	Payloads
-func (r *router) codecDecode(c *fiber.Ctx) error {
+func (r *router) codecConverter(c *fiber.Ctx) error {
 	encoders := r.cfg.Encoders
 
 	codecHandlers := make(map[string]http.Handler, len(encoders))
