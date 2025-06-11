@@ -34,6 +34,8 @@ func init() {
 	cache = expirable.NewLRU[string, []byte](5, nil, time.Minute*30)
 }
 
+// Run HTTP get and cache the results. This assumes that the
+// JWKS result won't change very often
 func cachedHTTPGet(url string) ([]byte, error) {
 	body, ok := cache.Get(url)
 	if ok {
@@ -64,10 +66,7 @@ func cachedHTTPGet(url string) ([]byte, error) {
 	return body, nil
 }
 
-func TemporalJWKS(token string) error {
-	return JWKS(token, TemporalIssuerURL)
-}
-
+// Generic JWKS authentication method
 func JWKS(token, jwksURL string) error {
 	body, err := cachedHTTPGet(jwksURL)
 	if err != nil {
@@ -85,4 +84,9 @@ func JWKS(token, jwksURL string) error {
 	}
 
 	return nil
+}
+
+// Validate against the Temporal Cloud JWKS
+func TemporalJWKS(token string) error {
+	return JWKS(token, TemporalIssuerURL)
 }
