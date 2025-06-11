@@ -31,7 +31,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.temporal.io/sdk/converter"
 
-	_ "github.com/mrsimonemms/temporal-codec-server/apps/server/docs"
+	_ "github.com/mrsimonemms/temporal-codec-server/apps/golang/docs"
 )
 
 type router struct {

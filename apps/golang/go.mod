@@ -1,4 +1,4 @@
-module github.com/mrsimonemms/temporal-codec-server/apps/server
+module github.com/mrsimonemms/temporal-codec-server/apps/golang
 
 go 1.24.3
 
