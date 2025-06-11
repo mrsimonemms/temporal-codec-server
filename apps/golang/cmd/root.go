@@ -36,6 +36,7 @@ import (
 var rootOpts struct {
 	CORSAllowCreds     bool
 	CORSOrigins        string
+	DisableAuth        bool
 	DisableCORS        bool
 	DisableSwagger     bool
 	EncryptionKeysPath string
@@ -80,6 +81,7 @@ var rootCmd = &cobra.Command{
 		router.New(app, router.Config{
 			CORSAllowCreds: rootOpts.CORSAllowCreds,
 			CORSOrigins:    rootOpts.CORSOrigins,
+			EnableAuth:     !rootOpts.DisableAuth,
 			EnableCORS:     !rootOpts.DisableCORS,
 			EnableSwagger:  !rootOpts.DisableSwagger,
 			Encoders:       encoders,
@@ -154,6 +156,7 @@ func init() {
 		bindEnv[string]("cors-origins", "https://cloud.temporal.io"),
 		"Configure the CORS Access-Control-Allow-Origin header. Accepts comma-separated values and can use wildcards",
 	)
+	rootCmd.Flags().BoolVar(&rootOpts.DisableAuth, "disable-auth", bindEnv[bool]("disable-auth", false), "Disable endpoint authorization")
 	rootCmd.Flags().BoolVar(
 		&rootOpts.DisableCORS,
 		"disable-cors",

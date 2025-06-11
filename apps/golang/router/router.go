@@ -30,11 +30,11 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/swagger"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.temporal.io/sdk/converter"
 
 	_ "github.com/mrsimonemms/temporal-codec-server/apps/golang/docs"
+	"github.com/mrsimonemms/temporal-codec-server/packages/golang/auth"
 )
 
 //go:embed public/*
@@ -109,16 +109,10 @@ func (r *router) register() {
 
 	// Temporal endpoints
 	r.app.
-		Use(func(c *fiber.Ctx) error {
-			log := c.Locals("logger").(zerolog.Logger).With().Dur("delay", r.cfg.Pause).Logger()
-
-			if r.cfg.Pause > 0 {
-				log.Debug().Msg("Pausing before resolving endpoints")
-				time.Sleep(r.cfg.Pause)
-				log.Debug().Msg("Pause ending")
-			}
-			return c.Next()
-		}).
+		// Check if we should enforce authorisation
+		Use(r.middlewareAuth(auth.TemporalJWKS)).
+		// Add a delay to calls - useful to demonstrate that calls are made in the client only
+		Use(r.middlewareAddDelay).
 		Post("/decode", r.codecConverter).
 		Post("/encode", r.codecConverter)
 
@@ -132,6 +126,7 @@ func (r *router) register() {
 type Config struct {
 	CORSAllowCreds bool
 	CORSOrigins    string
+	EnableAuth     bool
 	EnableCORS     bool
 	EnableSwagger  bool
 	Encoders       map[string][]converter.PayloadCodec
