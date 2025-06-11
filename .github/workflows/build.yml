@@ -35,7 +35,7 @@ jobs:
 
       - uses: dorny/paths-filter@v3
         id: filtered
-        if:  ${{ !startsWith(github.event.ref, 'refs/tags/') }}
+        if: ${{ !startsWith(github.event.ref, 'refs/tags/') }}
         with:
           list-files: json
           filters: |
@@ -335,3 +335,47 @@ jobs:
           platforms: ${{ steps.docker.outputs.platforms }}
           push: ${{ steps.docker.outputs.push }}
           tags: ${{ steps.docker.outputs.image_name }},${{ steps.docker.outputs.container_tagged_image }}
+
+  helm:
+    runs-on: ubuntu-latest
+    needs:
+      - commitlint
+      - pre-commit
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get branch names
+        id: branch-name
+        uses: tj-actions/branch-names@v8
+        with:
+          strip_tag_prefix: v
+
+      - name: Get tag
+        id: tag
+        run: |
+          if [ "${{ steps.branch-name.outputs.is_tag }}" = "true"  ];
+          then
+            echo "app_version=${{ steps.branch-name.outputs.tag }}" >> "$GITHUB_OUTPUT"
+            echo "tag=${{ steps.branch-name.outputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            APP_VERSION="branch-${{ steps.branch-name.outputs.current_branch }}"
+            # Change "/" for "-"
+            APP_VERSION="${APP_VERSION//\//-}"
+            # Set to lowercase
+            APP_VERSION="${APP_VERSION,,}"
+
+            echo "app_version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
+            echo "tag=0.0.0-${APP_VERSION}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish chart
+        uses: appany/helm-oci-chart-releaser@v0.4.2
+        with:
+          name: temporal-codec-server
+          app_version: ${{ steps.tag.outputs.app_version }}
+          repository: ${{ github.repository_owner }}
+          tag: ${{ steps.tag.outputs.tag }}
+          registry: ghcr.io
+          registry_username: ${{ github.actor }}
+          registry_password: ${{ secrets.GITHUB_TOKEN }}
+          update_dependencies: true
