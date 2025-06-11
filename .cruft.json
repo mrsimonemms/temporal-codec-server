@@ -5,7 +5,7 @@
   "context": {
     "cookiecutter": {
       "project_name": "temporal-codec-server",
-      "description": "Encrypt and decrypt your Temporal data",
+      "description": "Encode and decode your Temporal data",
       "author": "Simon Emms <simon@simonemms.com>",
       "repo": "github.com/mrsimonemms/temporal-codec-server",
       "_template": "https://github.com/mrsimonemms/new",

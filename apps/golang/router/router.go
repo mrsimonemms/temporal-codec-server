@@ -108,17 +108,19 @@ func (r *router) register() {
 	r.app.Get("/metrics", r.metrics())
 
 	// Temporal endpoints
-	r.app.Use(func(c *fiber.Ctx) error {
-		log := c.Locals("logger").(zerolog.Logger).With().Dur("delay", r.cfg.Pause).Logger()
+	r.app.
+		Use(func(c *fiber.Ctx) error {
+			log := c.Locals("logger").(zerolog.Logger).With().Dur("delay", r.cfg.Pause).Logger()
 
-		if r.cfg.Pause > 0 {
-			log.Debug().Msg("Pausing before resolving endpoints")
-			time.Sleep(r.cfg.Pause)
-			log.Debug().Msg("Pause ending")
-		}
-		return c.Next()
-	})
-	r.app.Post("/decode", r.codecDecode)
+			if r.cfg.Pause > 0 {
+				log.Debug().Msg("Pausing before resolving endpoints")
+				time.Sleep(r.cfg.Pause)
+				log.Debug().Msg("Pause ending")
+			}
+			return c.Next()
+		}).
+		Post("/decode", r.codecConverter).
+		Post("/encode", r.codecConverter)
 
 	// Serve data from the public directory - must be last
 	r.app.Use("/", filesystem.New(filesystem.Config{

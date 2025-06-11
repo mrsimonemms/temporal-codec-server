@@ -1,7 +1,7 @@
 {
   "name": "temporal-codec-server",
   "version": "0.0.0",
-  "description": "Encrypt and decrypt your Temporal data",
+  "description": "Encode and decode your Temporal data",
   "author": "Simon Emms <simon@simonemms.com>",
   "private": true,
   "license": "Apache-2.0",
