@@ -93,20 +93,7 @@ ingress:
   pathType: Prefix
   tls:
     # -- Enable TLS termination for requests
-    enabled: false
-    # -- Cert-manager cluster issuer - incompatible with `issuer`
-    clusterIssuer: ""
-    # -- Cert-manager issuer - incompatible with `clusterIssuer`
-    issuer: ""
-  # hosts:
-  #   - host: chart-example.local
-  #     paths:
-  #       - path: /
-  #         pathType: ImplementationSpecific
-  # tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+    enabled: true
 
 # -- Configure resources available
 resources: {}

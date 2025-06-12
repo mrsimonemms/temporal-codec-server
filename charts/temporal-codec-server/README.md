@@ -30,9 +30,7 @@ Deploy Temporal Codec Server
 | ingress.enabled | bool | `false` | Enable ingress |
 | ingress.host | string | `"codec.temporal.local"` | Domain to use for incoming requests |
 | ingress.pathType | string | `"Prefix"` | Type for the root path |
-| ingress.tls.clusterIssuer | string | `""` | Cert-manager cluster issuer - incompatible with `issuer` |
-| ingress.tls.enabled | bool | `false` | Enable TLS termination for requests |
-| ingress.tls.issuer | string | `""` | Cert-manager issuer - incompatible with `clusterIssuer` |
+| ingress.tls.enabled | bool | `true` | Enable TLS termination for requests |
 | keys.createSecret | bool | `true` | Create the keys secret |
 | keys.encryptionKeys | list | `[{"id":"laqcg6jzc3kx","key":"rgQfsrQKyLGWGoYPbWOn2KfwhdRueoLU"},{"id":"3xkyy9d0a1av","key":"54APIwgWHhF0bM365vdocJvXxEQNnw88"}]` | Encryption keys to use - these are examples to show the format used and should **NOT** be used |
 | keys.existingSecret | string | `""` | Use an existing secret to populate the keys |
