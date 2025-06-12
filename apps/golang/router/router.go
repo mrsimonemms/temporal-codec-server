@@ -108,13 +108,17 @@ func (r *router) register() {
 	r.app.Get("/metrics", r.metrics())
 
 	// Temporal endpoints
-	r.app.
+	handlers := []fiber.Handler{
 		// Check if we should enforce authorisation
-		Use(r.middlewareAuth(auth.TemporalJWKS)).
+		r.middlewareAuth(auth.TemporalJWKS),
 		// Add a delay to calls - useful to demonstrate that calls are made in the client only
-		Use(r.middlewareAddDelay).
-		Post("/decode", r.codecConverter).
-		Post("/encode", r.codecConverter)
+		r.middlewareAddDelay,
+		// Codec converter handler
+		r.codecConverter,
+	}
+	r.app.
+		Post("/decode", handlers...).
+		Post("/encode", handlers...)
 
 	// Serve data from the public directory - must be last
 	r.app.Use("/", filesystem.New(filesystem.Config{
