@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*.*.*"
   pull_request:
     branches:
       - main
@@ -33,6 +35,7 @@ jobs:
 
       - uses: dorny/paths-filter@v3
         id: filtered
+        if:  ${{ !startsWith(github.event.ref, 'refs/tags/') }}
         with:
           list-files: json
           filters: |
@@ -48,7 +51,19 @@ jobs:
           touch /tmp/all.yaml
           touch /tmp/apps.yaml
 
-          all='${{ steps.filtered.outputs.all_files }}'
+          if [ "${{ startsWith(github.event.ref, 'refs/tags/') }}" = "true"  ];
+          then
+            # Tag build - use everything
+            apps="$(find apps/ -maxdepth 1 -type d -and -not -name "apps" | jq -Rrc 'split(",")')"
+            pkgs="$(find packages/ -maxdepth 1 -type d -and -not -name "packages" | jq -Rrc 'split(",")')"
+
+            all="$(jq -rc --argjson apps "${apps}" --argjson pkgs "${pkgs}" -n '$apps + $pkgs')"
+          else
+            # Branch build - use filtered
+            all='${{ steps.filtered.outputs.all_files }}'
+            apps='${{ steps.filtered.outputs.apps_files }}'
+          fi
+
           for row in $(echo $all | jq -r '.[] | @base64'); do
             d=$(echo $row | base64 -d)
             f=$(echo "${d}" | awk -F/ '{print $1 "/" $2}')
@@ -58,7 +73,6 @@ jobs:
           done
           yq -i 'unique' /tmp/all.yaml || echo "[]" > /tmp/all.yaml
 
-          apps='${{ steps.filtered.outputs.apps_files }}'
           for row in $(echo $apps | jq -r '.[] | @base64'); do
             d=$(echo $row | base64 -d)
             full=$(echo "${d}" | awk -F/ '{print $1 "/" $2}')
@@ -272,7 +286,7 @@ jobs:
             # Tag name (usually vX.Y.Z)
             IMG_AND_TAG_NAME="${IMG_AND_TAG_NAME},${IMG_NAME}:${{ steps.branch-name.outputs.tag }}"
 
-            echo "image_name=${IMG_NAME}" >> "$GITHUB_OUTPUT"
+            echo "image_name=${IMG_AND_TAG_NAME}" >> "$GITHUB_OUTPUT"
             echo "platforms=linux/amd64,linux/arm64" >> "$GITHUB_OUTPUT"
             echo "push=true" >> "$GITHUB_OUTPUT"
             echo "version=${{ steps.branch-name.outputs.tag }}" >> "$GITHUB_OUTPUT"

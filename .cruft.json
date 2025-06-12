@@ -1,7 +1,7 @@
 {
   "template": "https://github.com/mrsimonemms/new",
-  "commit": "b4fee0623066d045e1435825e48f2a77b0648d2b",
-  "checkout": "main",
+  "commit": "952832351caa04db4a46d785775dd3d98e710e33",
+  "checkout": null,
   "context": {
     "cookiecutter": {
       "project_name": "temporal-codec-server",
@@ -9,7 +9,7 @@
       "author": "Simon Emms <simon@simonemms.com>",
       "repo": "github.com/mrsimonemms/temporal-codec-server",
       "_template": "https://github.com/mrsimonemms/new",
-      "_commit": "b4fee0623066d045e1435825e48f2a77b0648d2b"
+      "_commit": "952832351caa04db4a46d785775dd3d98e710e33"
     }
   },
   "directory": "monorepo",
