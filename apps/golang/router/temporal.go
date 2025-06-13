@@ -21,6 +21,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
+	"github.com/rs/zerolog"
+	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/converter"
 )
 
@@ -42,22 +44,34 @@ type Payload struct {
 // @Accept		json
 // @Produce		json
 // @Success		200	{string} OK
+// @Param		namespace	path	string	true	"Temporal namespace"
 // @Router		/decode [post]
 // @Router		/encode [post]
+// @Router		/{namespace}/decode [post]
+// @Router		/{namespace}/encode [post]
 // @Param		payload	body	Payloads	true	"Encoded payload data"
 // @Success		200	{object}	Payloads
 func (r *router) codecConverter(c *fiber.Ctx) error {
+	log := c.Locals("logger").(zerolog.Logger)
 	encoders := r.cfg.Encoders
 
 	codecHandlers := make(map[string]http.Handler, len(encoders))
 	for namespace, codecChain := range encoders {
+		log.Debug().Str("namespace", namespace).Msg("Implementing codec hancler")
+
 		handler := converter.NewPayloadCodecHTTPHandler(codecChain...)
 
 		codecHandlers[namespace] = handler
 	}
 
-	defaultHandler, ok := codecHandlers["default"]
+	namespace := c.Params("namespace", client.DefaultNamespace)
+	log = log.With().Str("namespace", namespace).Logger()
+
+	log.Debug().Msg("Executing codec handler")
+
+	defaultHandler, ok := codecHandlers[namespace]
 	if !ok {
+		log.Error().Msg("Unknown namespac")
 		return fiber.ErrNotFound
 	}
 

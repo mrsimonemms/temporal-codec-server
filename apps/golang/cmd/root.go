@@ -30,6 +30,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/converter"
 )
 
@@ -69,7 +70,7 @@ var rootCmd = &cobra.Command{
 
 		// Create the encoders map for each namespace
 		encoders := map[string][]converter.PayloadCodec{
-			"default": {aes.NewPayloadCodec(keys)},
+			client.DefaultNamespace: {aes.NewPayloadCodec(keys)},
 		}
 
 		app := fiber.New(fiber.Config{

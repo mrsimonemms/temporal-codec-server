@@ -118,7 +118,9 @@ func (r *router) register() {
 	}
 	r.app.
 		Post("/decode", handlers...).
-		Post("/encode", handlers...)
+		Post("/encode", handlers...).
+		Post("/:namespace/decode", handlers...).
+		Post("/:namespace/encode", handlers...)
 
 	// Serve data from the public directory - must be last
 	r.app.Use("/", filesystem.New(filesystem.Config{
