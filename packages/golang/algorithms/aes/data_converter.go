@@ -29,8 +29,8 @@ import (
 )
 
 const (
-	AESMimeType   = "binary/aes"
-	MetadataKeyID = "keyID"
+	AESMimeType   = "binary/encrypted"
+	MetadataKeyID = "encryption-key-id"
 )
 
 type codec struct {
