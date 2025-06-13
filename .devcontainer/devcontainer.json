@@ -27,7 +27,7 @@
   "containerEnv": {
     "CORS_ORIGINS": "http://localhost:8233,https://cloud.temporal.io",
     "GIT_REPO": "github.com/mrsimonemms/temporal-codec-server",
-    "KEYS_PATH": "/workspaces/temporal-codec-server/apps/golang/keys.example.yaml",
+    "KEYS_PATH": "/workspaces/temporal-codec-server/keys.example.yaml",
     "LOG_LEVEL": "trace"
   },
   "postStartCommand": {
