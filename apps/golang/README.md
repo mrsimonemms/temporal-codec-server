@@ -17,6 +17,8 @@ Golang implementation
 
 ## SDK usage
 
+[Example](../../examples/golang)
+
 ```go
 package main
 
