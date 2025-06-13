@@ -1,0 +1,4 @@
+- id: key1
+  key: passphrasewhichneedstobe32bytes!
+- id: key2
+  key: anoldpassphraseinourhistory!!!!!

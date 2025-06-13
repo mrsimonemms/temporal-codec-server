@@ -17,10 +17,11 @@
 package aes
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+
+	"sigs.k8s.io/yaml"
 )
 
 type Keys []Key
@@ -47,8 +48,8 @@ func ReadKeyFile(filepath string) (Keys, error) {
 	}
 
 	var keys Keys
-	if err := json.Unmarshal(byteValue, &keys); err != nil {
-		return nil, fmt.Errorf("error unmarshalling json: %w", err)
+	if err := yaml.Unmarshal(byteValue, &keys); err != nil {
+		return nil, fmt.Errorf("error unmarshalling key file: %w", err)
 	}
 
 	if len(keys) == 0 {

@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	go.temporal.io/api v1.50.0
 	go.temporal.io/sdk v1.34.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
