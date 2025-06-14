@@ -16,7 +16,9 @@
 
 // @@@SNIPSTART typescript-hello-worker
 import { NativeConnection, Worker } from '@temporalio/worker';
+import { AES } from '@mrsimonemms/temporal-codec-server';
 import * as activities from './activities';
+import { env } from 'node:process';
 
 async function run() {
   // Step 1: Establish a connection with Temporal server.
@@ -36,6 +38,9 @@ async function run() {
       // Workflows are registered using a path as they run in a separate JS context.
       workflowsPath: require.resolve('./workflows'),
       activities,
+      dataConverter: {
+        payloadCodecs: [await AES.create(env.KEYS_PATH)],
+      },
     });
 
     // Step 3: Start accepting tasks on the `hello-world` queue

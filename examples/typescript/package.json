@@ -23,17 +23,19 @@
     ]
   },
   "dependencies": {
+    "@mrsimonemms/temporal-codec-server": "file:../../packages/typescript",
     "@temporalio/activity": "^1.11.8",
     "@temporalio/client": "^1.11.8",
     "@temporalio/worker": "^1.11.8",
     "@temporalio/workflow": "^1.11.8",
-    "nanoid": "3.x"
+    "nanoid": "3.x",
+    "yaml": "^2.8.0"
   },
   "devDependencies": {
     "@temporalio/testing": "^1.11.8",
     "@tsconfig/node18": "^18.2.4",
     "@types/mocha": "8.x",
-    "@types/node": "^22.9.1",
+    "@types/node": "^22.15.32",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
     "eslint": "^8.57.1",

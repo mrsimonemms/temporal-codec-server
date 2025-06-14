@@ -5,13 +5,29 @@
       "label": "Run Temporal server",
       "type": "shell",
       "command": "temporal server start-dev --ui-codec-endpoint=http://localhost:3000",
-      "group": "none",
+      "group": "build",
       "presentation": {
         "reveal": "always",
         "panel": "new"
       },
       "runOptions": {
         "runOn": "folderOpen"
+      }
+    },
+    {
+      "label": "Build TypeScript",
+      "type": "shell",
+      "command": "npm run build -- --watch",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/packages/typescript"
       }
     }
   ]

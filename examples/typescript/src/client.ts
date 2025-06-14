@@ -16,8 +16,10 @@
 
 // @@@SNIPSTART typescript-hello-client
 import { Connection, Client } from '@temporalio/client';
-import { example } from './workflows';
 import { nanoid } from 'nanoid';
+import { env } from 'node:process';
+import { AES } from '@mrsimonemms/temporal-codec-server';
+import { example } from './workflows';
 
 async function run() {
   // Connect to the default Server location
@@ -30,6 +32,9 @@ async function run() {
 
   const client = new Client({
     connection,
+    dataConverter: {
+      payloadCodecs: [await AES.create(env.KEYS_PATH)],
+    },
     // namespace: 'foo.bar', // connects to 'default' namespace if not specified
   });
 
