@@ -18,7 +18,7 @@
 import { Connection, Client } from '@temporalio/client';
 import { nanoid } from 'nanoid';
 import { env } from 'node:process';
-import { AES } from '@mrsimonemms/temporal-codec-server';
+import { AESCodec } from '@mrsimonemms/temporal-codec-server';
 import { example } from './workflows';
 
 async function run() {
@@ -33,7 +33,7 @@ async function run() {
   const client = new Client({
     connection,
     dataConverter: {
-      payloadCodecs: [await AES.create(env.KEYS_PATH)],
+      payloadCodecs: [await AESCodec.create(env.KEYS_PATH)],
     },
     // namespace: 'foo.bar', // connects to 'default' namespace if not specified
   });

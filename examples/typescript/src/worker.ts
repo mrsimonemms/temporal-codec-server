@@ -16,7 +16,7 @@
 
 // @@@SNIPSTART typescript-hello-worker
 import { NativeConnection, Worker } from '@temporalio/worker';
-import { AES } from '@mrsimonemms/temporal-codec-server';
+import { AESCodec } from '@mrsimonemms/temporal-codec-server';
 import * as activities from './activities';
 import { env } from 'node:process';
 
@@ -39,7 +39,7 @@ async function run() {
       workflowsPath: require.resolve('./workflows'),
       activities,
       dataConverter: {
-        payloadCodecs: [await AES.create(env.KEYS_PATH)],
+        payloadCodecs: [await AESCodec.create(env.KEYS_PATH)],
       },
     });
 

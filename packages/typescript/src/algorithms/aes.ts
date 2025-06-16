@@ -34,15 +34,11 @@ export interface Key {
 const ENCODING = 'binary/encrypted';
 const METADATA_ENCRYPTION_KEY_ID = 'encryption-key-id';
 
-export class AES implements PayloadCodec {
-  private keys: Key[];
-
-  constructor(keys: Key[]) {
+export class AESCodec implements PayloadCodec {
+  constructor(private keys: Key[]) {
     if (keys.length === 0) {
       throw new PayloadConverterError('Keys are required for AES encryption');
     }
-
-    // this.keys = keys;
   }
 
   decode(payloads: Payload[]): Promise<Payload[]> {
@@ -96,7 +92,7 @@ export class AES implements PayloadCodec {
     );
   }
 
-  static async create(keyPath?: string): Promise<AES> {
+  static async create(keyPath?: string): Promise<AESCodec> {
     if (!keyPath) {
       throw new PayloadConverterError('Encryption key path is required');
     }
@@ -122,7 +118,7 @@ export class AES implements PayloadCodec {
       };
     });
 
-    return new AES(keys);
+    return new AESCodec(keys);
   }
 
   private fetchKey(keyId: string): Promise<crypto.CryptoKey> {
