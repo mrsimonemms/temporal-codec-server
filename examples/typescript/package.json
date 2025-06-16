@@ -28,7 +28,7 @@
     "@temporalio/client": "^1.11.8",
     "@temporalio/worker": "^1.11.8",
     "@temporalio/workflow": "^1.11.8",
-    "nanoid": "3.x",
+    "nanoid": "5.x",
     "yaml": "^2.8.0"
   },
   "devDependencies": {
