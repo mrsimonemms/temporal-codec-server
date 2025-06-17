@@ -26,6 +26,7 @@
   },
   "containerEnv": {
     "CORS_ORIGINS": "http://localhost:8233,https://cloud.temporal.io",
+    "DISABLE_AUTH": "true",
     "GIT_REPO": "github.com/mrsimonemms/temporal-codec-server",
     "KEYS_PATH": "/workspaces/temporal-codec-server/keys.example.yaml",
     "LOG_LEVEL": "trace"

@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -137,65 +136,76 @@ func Execute() {
 }
 
 func init() {
+	viper.AutomaticEnv()
+
+	viper.SetDefault("log_level", zerolog.InfoLevel.String())
 	rootCmd.PersistentFlags().StringVarP(
 		&rootOpts.LogLevel,
 		"log-level",
 		"l",
-		bindEnv[string]("log-level", zerolog.InfoLevel.String()),
+		viper.GetString("log_level"),
 		fmt.Sprintf("log level: %s", "Set log level"),
 	)
 
+	viper.SetDefault("cors_allow_creds", true)
 	rootCmd.Flags().BoolVar(
 		&rootOpts.CORSAllowCreds,
 		"cors-allow-creds",
-		bindEnv[bool]("cors-allow-creds", true),
+		viper.GetBool("cors_allow_creds"),
 		"Configure the CORS Access-Control-Allow-Credentials header",
 	)
+
+	viper.SetDefault("cors_origins", "https://cloud.temporal.io")
 	rootCmd.Flags().StringVar(
 		&rootOpts.CORSOrigins,
 		"cors-origins",
-		bindEnv[string]("cors-origins", "https://cloud.temporal.io"),
+		viper.GetString("cors_origins"),
 		"Configure the CORS Access-Control-Allow-Origin header. Accepts comma-separated values and can use wildcards",
 	)
-	rootCmd.Flags().BoolVar(&rootOpts.DisableAuth, "disable-auth", bindEnv[bool]("disable-auth", false), "Disable endpoint authorization")
+
+	viper.SetDefault("disable_auth", false)
+	rootCmd.Flags().BoolVar(
+		&rootOpts.DisableAuth,
+		"disable-auth",
+		viper.GetBool("disable_auth"),
+		"Disable endpoint authorization",
+	)
+
+	viper.SetDefault("disable_cors", false)
 	rootCmd.Flags().BoolVar(
 		&rootOpts.DisableCORS,
 		"disable-cors",
-		bindEnv[bool]("disable-cors", false),
+		viper.GetBool("disable_cors"),
 		"Disable CORS",
 	)
+
+	viper.SetDefault("disable_swagger", false)
 	rootCmd.Flags().BoolVar(
 		&rootOpts.DisableSwagger,
 		"disable-swagger",
-		bindEnv[bool]("disable-swagger", false),
+		viper.GetBool("disable_swagger"),
 		"Disable Swagger endpoint",
 	)
+
+	viper.SetDefault("keys_path", "")
 	rootCmd.Flags().StringVar(
 		&rootOpts.EncryptionKeysPath,
 		"keys-path",
-		bindEnv[string]("keys-path", ""),
+		viper.GetString("keys_path"),
 		"Path of JSON file for encryption keys in key/value format",
 	)
-	rootCmd.Flags().StringVarP(&rootOpts.Host, "host", "H", bindEnv[string]("host", ""), "Server listen host")
-	rootCmd.Flags().IntVarP(&rootOpts.Port, "port", "p", bindEnv[int]("port", 3000), "Server listen port")
+
+	viper.SetDefault("host", "")
+	rootCmd.Flags().StringVarP(&rootOpts.Host, "host", "H", viper.GetString("host"), "Server listen host")
+
+	viper.SetDefault("port", 3000)
+	rootCmd.Flags().IntVarP(&rootOpts.Port, "port", "p", viper.GetInt("port"), "Server listen port")
+
+	viper.SetDefault("pause", 0)
 	rootCmd.Flags().DurationVar(
 		&rootOpts.Pause,
 		"pause",
-		bindEnv[time.Duration]("pause", time.Nanosecond*0),
+		viper.GetDuration("pause"),
 		"Artificial pause before encoding and decoding endpoints are resolved",
 	)
-}
-
-func bindEnv[T any](key string, defaultValue ...any) T {
-	envvarName := strings.ReplaceAll(key, "-", "_")
-	envvarName = strings.ToUpper(envvarName)
-
-	err := viper.BindEnv(key, envvarName)
-	cobra.CheckErr(err)
-
-	for _, val := range defaultValue {
-		viper.SetDefault(key, val)
-	}
-
-	return viper.Get(key).(T)
 }
