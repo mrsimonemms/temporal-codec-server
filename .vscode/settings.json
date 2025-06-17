@@ -26,5 +26,8 @@
   "go.lintTool": "golangci-lint",
   "go.lintFlags": [
     "--fast"
+  ],
+  "python.analysis.extraPaths": [
+    "./packages/python"
   ]
 }

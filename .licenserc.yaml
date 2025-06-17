@@ -12,6 +12,8 @@ header:
     - "**/*.{json,md,yml,yaml,txt}"
     - "**/.gitkeep"
     - examples/**/*
+    - "**/py.typed"
+    - "**/*.lock"
   comment: on-failure
   language:
     Go:

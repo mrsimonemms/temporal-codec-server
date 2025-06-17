@@ -58,6 +58,7 @@ treated as a secret.
 ### Library
 
 * [Go](./packages/golang)
+* [Python](./packages/python)
 * [TypeScript](./packages/typescript)
 
 ## Deployment
