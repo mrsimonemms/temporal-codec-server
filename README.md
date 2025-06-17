@@ -6,7 +6,9 @@ Encode and decode your Temporal data
 
 * [Purpose](#purpose)
   * [Key file format](#key-file-format)
-  * [Languages](#languages)
+* [Languages](#languages)
+  * [Codec Server](#codec-server)
+  * [Library](#library)
 * [Deployment](#deployment)
 * [Contributing](#contributing)
   * [Open in a container](#open-in-a-container)
@@ -18,13 +20,16 @@ Encode and decode your Temporal data
 
 ## Purpose
 
-This repository is designed to act as a guide for creating a
-[Codec Server](https://docs.temporal.io/production-deployment/data-encryption)
+This repository is designed to act as a practical guide for implementing
+[data encryption](https://docs.temporal.io/production-deployment/data-encryption)
 for every language [officially supported by Temporal](https://docs.temporal.io/encyclopedia/temporal-sdks#official-sdks).
 
 For every language, these implement an [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard)
 encryption algorithm and add an `encryption-key-id` to the metadata. Multiple
 keys can be added to allow for key rotation.
+
+The Codec servers and libraries are mutually compatible meaning you are not
+required to install multiple versions of the Codec server for each SDK you us.
 
 ### Key file format
 
@@ -42,15 +47,18 @@ treated as a secret.
   key: anoldpassphraseinourhistory!!!!!
 ```
 
-### Languages
+## Languages
+
+### Codec Server
+
+> Other languages coming soon
 
 * [Go](./apps/golang)
-* Java - coming soon
-* PHP - coming soon
-* Python - coming soon
-* TypeScript - coming soon
-* .Net - coming soon
-* Ruby - coming soon
+
+### Library
+
+* [Go](./packages/golang)
+* [TypeScript](./packages/typescript)
 
 ## Deployment
 
