@@ -21,3 +21,6 @@ go.work.sum
 **/*/src/interfaces
 # Avoid duplication from Docker Compose volumes
 **/*/proto
+
+__pycache__
+.venv
