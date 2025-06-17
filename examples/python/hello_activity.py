@@ -1,11 +1,16 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
+import os
+import uuid
 
 from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
+import temporalio.converter
+
+from temporalcodec.encryption import EncryptionCodec
 
 
 # While we could use multiple parameters in the activity, Temporal strongly
@@ -43,7 +48,12 @@ async def main():
     # logging.basicConfig(level=logging.INFO)
 
     # Start client
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(
+        "localhost:7233",
+        data_converter=dataclass_replace(
+            temporalio.converter.default(), payload_codec=await EncryptionCodec.create(keypath=os.environ['KEYS_PATH'])
+        ),
+    )
 
     # Run a worker for the workflow
     async with Worker(
@@ -63,7 +73,7 @@ async def main():
         result = await client.execute_workflow(
             GreetingWorkflow.run,
             "World",
-            id="hello-activity-workflow-id",
+            id="hello-activity" + str(uuid.uuid4()),
             task_queue="hello-activity-task-queue",
         )
         print(f"Result: {result}")

@@ -30,7 +30,8 @@
     "DISABLE_AUTH": "true",
     "GIT_REPO": "github.com/mrsimonemms/temporal-codec-server",
     "KEYS_PATH": "/workspaces/temporal-codec-server/keys.example.yaml",
-    "LOG_LEVEL": "trace"
+    "LOG_LEVEL": "trace",
+    "UV_LINK_MODE": "copy"
   },
   "postStartCommand": {
     "installAir": "go install github.com/air-verse/air@latest",

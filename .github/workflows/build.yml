@@ -380,6 +380,47 @@ jobs:
           registry_password: ${{ secrets.GITHUB_TOKEN }}
           update_dependencies: true
 
+  python:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/temporalcodec
+    permissions:
+      id-token: write
+    needs:
+      - build
+    if: startsWith(github.event.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Configure UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          activate-environment: true
+          working-directory: ./packages/python
+
+      - name: Get branch names
+        id: branch-name
+        uses: tj-actions/branch-names@v8
+        with:
+          strip_tag_prefix: v
+
+      - name: Prepare package
+        working-directory: ./packages/python
+        run: |
+          uv sync
+          uv version ${{ steps.branch-name.outputs.tag }}
+          uv build
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/python/dist
+
   typescript:
     runs-on: ubuntu-latest
     needs:
