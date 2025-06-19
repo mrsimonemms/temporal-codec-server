@@ -320,7 +320,7 @@ jobs:
           echo "commit_id=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
           echo "container_tagged_image=${IMG_NAME}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
           echo "dockerfile=${DOCKERFILE}" >> "$GITHUB_OUTPUT"
-          echo "gitRepo=github.com/${GITHUB_REPOSITORY}" >> "$GITHUB_OUTPUT"
+          echo "gitRepo=github.com/${GITHUB_REPOSITORY}/apps/${{ matrix.component }}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push
         uses: docker/build-push-action@v5
