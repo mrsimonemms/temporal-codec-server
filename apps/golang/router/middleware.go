@@ -52,10 +52,10 @@ func (r *router) middlewareAuth(authFN MiddlewareAuthFunction) func(c *fiber.Ctx
 
 		log.Debug().Msg("Looking for token")
 		var token string
-		authHeader, ok := c.GetReqHeaders()["Authorization"]
-		if ok && len(authHeader) == 1 {
+		authHeader := c.Get("Authorization")
+		if authHeader != "" {
 			log.Debug().Msg("Auth header found")
-			split := strings.Split(authHeader[0], "Bearer")
+			split := strings.Split(authHeader, "Bearer")
 			if len(split) == 2 {
 				log.Debug().Msg("Auth header is a bearer token")
 				token = strings.TrimSpace(split[1])
