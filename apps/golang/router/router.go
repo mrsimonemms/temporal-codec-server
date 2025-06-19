@@ -19,13 +19,10 @@
 package router
 
 import (
-	"embed"
-	"net/http"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
@@ -36,9 +33,6 @@ import (
 	_ "github.com/mrsimonemms/temporal-codec-server/apps/golang/docs"
 	"github.com/mrsimonemms/temporal-codec-server/packages/golang/auth"
 )
-
-//go:embed public/*
-var publicDir embed.FS
 
 type router struct {
 	app *fiber.App
@@ -100,6 +94,15 @@ func (r *router) register() {
 		r.app.Get("api/*", swagger.HandlerDefault)
 	}
 
+	// Webpages
+	r.app.Get("/", func(c *fiber.Ctx) error {
+		return c.Render("index", fiber.Map{
+			"EnableSwagger": r.cfg.EnableSwagger,
+			"Version":       r.cfg.Version,
+			"Year":          2025,
+		})
+	})
+
 	// Health and observability checks
 	r.app.Use(healthcheck.New(healthcheck.Config{
 		LivenessProbe:  r.healthcheckProbe,
@@ -121,12 +124,6 @@ func (r *router) register() {
 		Post("/encode", handlers...).
 		Post("/:namespace/decode", handlers...).
 		Post("/:namespace/encode", handlers...)
-
-	// Serve data from the public directory - must be last
-	r.app.Use("/", filesystem.New(filesystem.Config{
-		Root:       http.FS(publicDir),
-		PathPrefix: "public",
-	}))
 }
 
 type Config struct {
@@ -137,6 +134,7 @@ type Config struct {
 	EnableSwagger  bool
 	Encoders       map[string][]converter.PayloadCodec
 	Pause          time.Duration
+	Version        string
 }
 
 func New(app *fiber.App, cfg Config) *router {

@@ -19,11 +19,14 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/template/html/v2"
 	"github.com/mrsimonemms/temporal-codec-server/apps/golang/router"
+	"github.com/mrsimonemms/temporal-codec-server/apps/golang/views"
 	"github.com/mrsimonemms/temporal-codec-server/packages/golang/algorithms/aes"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -76,6 +79,7 @@ var rootCmd = &cobra.Command{
 			AppName:               "temporal-codec-server",
 			DisableStartupMessage: true,
 			ErrorHandler:          fiberErrorHandler,
+			Views:                 html.NewFileSystem(http.FS(views.ViewsDir), ".html"),
 		})
 
 		router.New(app, router.Config{
@@ -86,6 +90,7 @@ var rootCmd = &cobra.Command{
 			EnableSwagger:  !rootOpts.DisableSwagger,
 			Encoders:       encoders,
 			Pause:          rootOpts.Pause,
+			Version:        Version,
 		})
 
 		addr := fmt.Sprintf("%s:%d", rootOpts.Host, rootOpts.Port)

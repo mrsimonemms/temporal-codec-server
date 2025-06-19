@@ -14,7 +14,7 @@
   ~ limitations under the License.
 -->
 
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
@@ -40,16 +40,20 @@
 
     <section class="is-flex-grow-1 py-5">
       <div class="container">
-        Secure your data sent to Temporal. <a href="/api">View Swagger docs</a>
+        Secure your data sent to Temporal. {{ if .EnableSwagger }}
+        <a href="/api">View Swagger docs</a>
+        {{ end }}
       </div>
     </section>
 
     <footer class="footer">
       <div class="content has-text-centered">
         <p>
-          <strong>Temporal Codec Server</strong>
+          <strong>Temporal Codec Server {{ .Version }}</strong>
+        </p>
+        <p>
           <a href="https://simonemms.com" target="_blank">Simon Emms</a>
-          &copy;2025
+          &copy;{{ .Year }}
         </p>
         <p>
           <a
