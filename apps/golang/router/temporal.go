@@ -39,7 +39,7 @@ type Payload struct {
 
 // Encode and decode your Temporal data godoc
 // @Summary		Encode and decode Temporal data
-// @Description Encode and decode your encrypted Temporal data
+// @Description Encode and decode your encrypted Temporal data.
 // @Tags		Temporal
 // @Accept		json
 // @Produce		json
@@ -64,16 +64,35 @@ func (r *router) codecConverter(c *fiber.Ctx) error {
 		codecHandlers[namespace] = handler
 	}
 
-	namespace := c.Params("namespace", client.DefaultNamespace)
+	// Get the namespace - use the default namespace unless told otherwise
+	namespace := client.DefaultNamespace
+	if nsp := c.Params("namespace"); nsp != "" {
+		// Set by route - this cannot be changed
+		log.Debug().Str("namespace", nsp).Msg("Namespace set by route")
+		namespace = nsp
+	} else {
+		// Namespace not set by the route - first look for an x-namespace parameter
+		log.Debug().Msg("No namespace set in the route - searching for header")
+		namespaceHeader := c.Get("X-Namespace")
+		if namespaceHeader != "" {
+			// Does the namespace in the header have a configured codec handler?
+			log.Debug().Msg("X-Namespace header is set - looking for hander")
+			if _, ok := codecHandlers[namespaceHeader]; ok {
+				log.Debug().Msg("Using namespace in X-Namespace header")
+				namespace = namespaceHeader
+			}
+		}
+	}
+
 	log = log.With().Str("namespace", namespace).Logger()
 
-	log.Debug().Msg("Executing codec handler")
-
-	defaultHandler, ok := codecHandlers[namespace]
+	log.Debug().Msg("Finding codec handler")
+	handler, ok := codecHandlers[namespace]
 	if !ok {
-		log.Error().Msg("Unknown namespac")
+		log.Error().Msg("Unknown namespace")
 		return fiber.ErrNotFound
 	}
 
-	return adaptor.HTTPHandler(defaultHandler)(c)
+	log.Debug().Msg("Executing codec handler")
+	return adaptor.HTTPHandler(handler)(c)
 }
