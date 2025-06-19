@@ -40,6 +40,11 @@ func (r *router) middlewareAuth(authFN MiddlewareAuthFunction) func(c *fiber.Ctx
 	return func(c *fiber.Ctx) error {
 		log := c.Locals("logger").(zerolog.Logger)
 
+		if strings.HasSuffix(c.OriginalURL(), "/encode") {
+			log.Debug().Msg("Authorisation not enabled for encode endpoints")
+			return c.Next()
+		}
+
 		if !r.cfg.EnableAuth {
 			log.Debug().Msg("Authorisation not enabled - passing through")
 			return c.Next()
