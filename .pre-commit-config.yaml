@@ -23,14 +23,14 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/bufbuild/buf
-    rev: v1.50.0
+    rev: v1.54.0
     hooks:
       - id: buf-lint
         entry: buf lint proto
       - id: buf-format
         entry: buf format -w --exit-code proto
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.0.0
+    rev: v4.2.0
     hooks:
       - id: conventional-pre-commit
         stages:
@@ -40,11 +40,11 @@ repos:
     hooks:
       - id: markdown-toc
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.17.2
+    rev: v0.18.1
     hooks:
       - id: markdownlint-cli2
   - repo: https://github.com/golangci/golangci-lint
-    rev: v1.64.5
+    rev: v2.1.6
     hooks:
       - id: golangci-lint
   - repo: https://github.com/mrsimonemms/toodaloo
