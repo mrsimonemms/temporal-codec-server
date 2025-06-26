@@ -24,3 +24,6 @@ go.work.sum
 
 __pycache__
 .venv
+
+bin/
+obj/
