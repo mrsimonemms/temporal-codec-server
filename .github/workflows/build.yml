@@ -215,7 +215,7 @@ jobs:
 
       - name: golangci-lint
         if: steps.lang.outputs.lang == 'go'
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
 
       # JS checks
       - name: "JS: Setup"
