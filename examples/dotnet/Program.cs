@@ -1,11 +1,17 @@
 ﻿using Microsoft.Extensions.Logging;
 using Temporalio.Client;
 using Temporalio.Worker;
+using Temporalio.Converters;
 using Dotnet.ActivitySimple;
+using TemporalCodec.Algorithms.AES;
 
 // Create a client to localhost on default namespace
 var client = await TemporalClient.ConnectAsync(new("localhost:7233")
 {
+  DataConverter = DataConverter.Default with
+  {
+    PayloadCodec = await AESCodec.Create(Environment.GetEnvironmentVariable("KEYS_PATH"))
+  },
   LoggerFactory = LoggerFactory.Create(builder =>
       builder.
           SetMinimumLevel(LogLevel.Information)),
@@ -44,9 +50,15 @@ async Task RunWorkerAsync()
 async Task ExecuteWorkflowAsync()
 {
   Console.WriteLine("Executing workflow");
-  await client.ExecuteWorkflowAsync(
+
+  Random rnd = new();
+  int id = rnd.Next(1000, 9999);
+
+  string res = await client.ExecuteWorkflowAsync(
       (MyWorkflow wf) => wf.RunAsync("World"),
-      new(id: "activity-simple-workflow-id", taskQueue: "activity-simple-sample"));
+      new(id: $"activity-simple-workflow-{id}", taskQueue: "activity-simple-sample"));
+
+  Console.WriteLine($"Result: {res}");
 }
 
 switch (args.ElementAtOrDefault(0))

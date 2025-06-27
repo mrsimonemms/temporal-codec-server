@@ -21,7 +21,9 @@
         "tamasfe.even-better-toml",
         "zxh404.vscode-proto3",
         "cweijan.vscode-mysql-client2",
-        "Tim-Koehler.helm-intellisense"
+        "Tim-Koehler.helm-intellisense",
+        "ms-dotnettools.csdevkit",
+        "logerfo.sln-support"
       ],
       "settings": {}
     }
