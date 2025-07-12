@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"time"
 
@@ -37,8 +38,9 @@ import (
 //
 // And development. It's (probably) fine for development.
 type remote struct {
-	url    string
-	client *http.Client
+	url     string
+	headers map[string]string
+	client  *http.Client
 }
 
 func (r *remote) exec(endpoint string, payloads []*common.Payload) ([]*common.Payload, error) {
@@ -52,6 +54,10 @@ func (r *remote) exec(endpoint string, payloads []*common.Payload) ([]*common.Pa
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/%s", r.url, endpoint), bytes.NewBuffer(input))
 	if err != nil {
 		return nil, fmt.Errorf("error creating http request: %w", err)
+	}
+
+	for k, v := range r.headers {
+		req.Header.Add(k, v)
 	}
 
 	res, err := r.client.Do(req)
@@ -85,9 +91,15 @@ func (r *remote) Encode(payloads []*common.Payload) ([]*common.Payload, error) {
 	return r.exec("encode", payloads)
 }
 
-func DataConverter(url string) converter.DataConverter {
+func DataConverter(url string, customHeaders ...map[string]string) converter.DataConverter {
+	headers := map[string]string{}
+	for _, c := range customHeaders {
+		maps.Copy(headers, c)
+	}
+
 	return converter.NewCodecDataConverter(converter.GetDefaultDataConverter(), &remote{
-		url: url,
+		url:     url,
+		headers: headers,
 		client: &http.Client{
 			Timeout: time.Second * 5,
 		},
