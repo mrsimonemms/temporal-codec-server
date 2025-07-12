@@ -20,6 +20,10 @@ keys:
   existingSecret: ""
 
 config:
+  # -- Optionally allow HTTP Basic to be used for /decode endpoints - also requires password
+  basicUsername:
+  # -- Optionally allow HTTP Basic to be used for /decode endpoints - also requires username
+  basicPassword:
   # -- Allow credentials to be sent through CORS
   corsAllowCreds: true
   # -- Origins allowed to use CORS
@@ -35,6 +39,8 @@ config:
   logLevel: info
   # -- Pause before resolving the /decode and /encode endpoints
   pause: 0s
+
+env: []
 
 image:
   # -- Image repositiory

@@ -13,6 +13,8 @@ Deploy Temporal Codec Server
 | autoscaling.maxReplicas | int | `100` | Maximum replicas |
 | autoscaling.minReplicas | int | `1` | Minimum replicas |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` | When to trigger a new replica |
+| config.basicPassword | string | `nil` | Optionally allow HTTP Basic to be used for /decode endpoints - also requires username |
+| config.basicUsername | string | `nil` | Optionally allow HTTP Basic to be used for /decode endpoints - also requires password |
 | config.corsAllowCreds | bool | `true` | Allow credentials to be sent through CORS |
 | config.corsOrigins | list | `["https://cloud.temporal.io"]` | Origins allowed to use CORS |
 | config.disableAuth | bool | `false` | Disable authentication |
@@ -20,6 +22,7 @@ Deploy Temporal Codec Server
 | config.disableSwagger | bool | `false` | Disable Swagger |
 | config.logLevel | string | `"info"` | Log level |
 | config.pause | string | `"0s"` | Pause before resolving the /decode and /encode endpoints |
+| env | list | `[]` |  |
 | fullnameOverride | string | `""` | String to fully override names |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
 | image.repository | string | `"ghcr.io/mrsimonemms/temporal-codec-server/golang"` | Image repositiory |

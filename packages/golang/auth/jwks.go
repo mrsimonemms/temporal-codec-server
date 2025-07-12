@@ -87,6 +87,10 @@ func JWKS(token, jwksURL string) error {
 }
 
 // Validate against the Temporal Cloud JWKS
-func TemporalJWKS(token string) error {
-	return JWKS(token, TemporalIssuerURL)
+func TemporalJWKS(authType, token string) error {
+	if authType == "Bearer" {
+		return JWKS(token, TemporalIssuerURL)
+	}
+
+	return ErrInvalidAuthType
 }

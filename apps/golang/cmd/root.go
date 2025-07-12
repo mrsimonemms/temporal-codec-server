@@ -37,6 +37,8 @@ import (
 )
 
 var rootOpts struct {
+	BasicUsername      string
+	BasicPassword      string
 	CORSAllowCreds     bool
 	CORSOrigins        string
 	DisableAuth        bool
@@ -83,6 +85,8 @@ var rootCmd = &cobra.Command{
 		})
 
 		router.New(app, router.Config{
+			BasicUsername:  rootOpts.BasicUsername,
+			BasicPassword:  rootOpts.BasicPassword,
 			CORSAllowCreds: rootOpts.CORSAllowCreds,
 			CORSOrigins:    rootOpts.CORSOrigins,
 			EnableAuth:     !rootOpts.DisableAuth,
@@ -150,6 +154,22 @@ func init() {
 		"l",
 		viper.GetString("log_level"),
 		fmt.Sprintf("log level: %s", "Set log level"),
+	)
+
+	viper.SetDefault("basic_username", "")
+	rootCmd.Flags().StringVar(
+		&rootOpts.BasicUsername,
+		"basic-username",
+		viper.GetString("basic_username"),
+		"Add HTTP Basic username for authentication",
+	)
+
+	viper.SetDefault("basic_password", "")
+	rootCmd.Flags().StringVar(
+		&rootOpts.BasicPassword,
+		"basic-password",
+		viper.GetString("basic_password"),
+		"Add HTTP Basic password for authentication",
 	)
 
 	viper.SetDefault("cors_allow_creds", true)

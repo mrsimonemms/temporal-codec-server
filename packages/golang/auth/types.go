@@ -16,8 +16,4 @@
 
 package auth
 
-import "fmt"
-
-var ErrInvalidAuthType = fmt.Errorf("invalid authentication type")
-
-const TemporalIssuerURL = "https://login.tmprl.cloud/.well-known/jwks.json"
+type MiddlewareAuthFunction func(authType string, authToken string) error

@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/mrsimonemms/temporal-codec-server/packages/golang/auth"
 	"github.com/rs/zerolog"
 )
 
@@ -36,7 +37,7 @@ func (r *router) middlewareAddDelay(c *fiber.Ctx) error {
 }
 
 // Ensure that only authorised users can access
-func (r *router) middlewareAuth(authFN MiddlewareAuthFunction) func(c *fiber.Ctx) error {
+func (r *router) middlewareAuth(authFN auth.MiddlewareAuthFunction) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		log := c.Locals("logger").(zerolog.Logger)
 
@@ -51,21 +52,23 @@ func (r *router) middlewareAuth(authFN MiddlewareAuthFunction) func(c *fiber.Ctx
 		}
 
 		log.Debug().Msg("Looking for token")
+		var authType string
 		var token string
 		authHeader := c.Get("Authorization")
 		if authHeader != "" {
 			log.Debug().Msg("Auth header found")
-			split := strings.Split(authHeader, "Bearer")
+			split := strings.Split(authHeader, " ")
 			if len(split) == 2 {
-				log.Debug().Msg("Auth header is a bearer token")
+				log.Debug().Msg("Auth header is set")
+				authType = strings.TrimSpace(split[0])
 				token = strings.TrimSpace(split[1])
 			}
 		}
 
-		if token != "" {
+		if authType != "" && token != "" {
 			log.Debug().Msg("Validating the auth header")
 
-			if err := authFN(token); err == nil {
+			if err := authFN(authType, token); err == nil {
 				log.Debug().Msg("Token is valid")
 				return c.Next()
 			}
@@ -75,5 +78,3 @@ func (r *router) middlewareAuth(authFN MiddlewareAuthFunction) func(c *fiber.Ctx
 		return fiber.ErrUnauthorized
 	}
 }
-
-type MiddlewareAuthFunction func(string) error

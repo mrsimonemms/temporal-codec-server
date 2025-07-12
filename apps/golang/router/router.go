@@ -19,6 +19,7 @@
 package router
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -111,9 +112,19 @@ func (r *router) register() {
 	r.app.Get("/metrics", r.metrics())
 
 	// Temporal endpoints
+	authFns := []auth.MiddlewareAuthFunction{
+		auth.JWKS,
+	}
+	if r.cfg.BasicUsername != "" && r.cfg.BasicPassword != "" {
+		log.Debug().Msg("Add HTTP Basic authentication")
+		authFns = append(authFns, auth.HTTPBasic(r.cfg.BasicUsername, r.cfg.BasicPassword))
+	}
+	fmt.Println(r.cfg.BasicPassword)
+	fmt.Println(r.cfg.BasicUsername)
+
 	handlers := []fiber.Handler{
 		// Check if we should enforce authorisation
-		r.middlewareAuth(auth.TemporalJWKS),
+		r.middlewareAuth(auth.OneOf(authFns...)),
 		// Add a delay to calls - useful to demonstrate that calls are made in the client only
 		r.middlewareAddDelay,
 		// Codec converter handler
@@ -127,6 +138,8 @@ func (r *router) register() {
 }
 
 type Config struct {
+	BasicUsername  string
+	BasicPassword  string
 	CORSAllowCreds bool
 	CORSOrigins    string
 	EnableAuth     bool

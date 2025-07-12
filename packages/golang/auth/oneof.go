@@ -16,8 +16,25 @@
 
 package auth
 
-import "fmt"
+func OneOf(fns ...MiddlewareAuthFunction) MiddlewareAuthFunction {
+	count := len(fns)
+	if count == 0 {
+		panic("auth.OneOf must have at least one function")
+	}
 
-var ErrInvalidAuthType = fmt.Errorf("invalid authentication type")
-
-const TemporalIssuerURL = "https://login.tmprl.cloud/.well-known/jwks.json"
+	return func(authType, authToken string) error {
+		for k, fn := range fns {
+			err := fn(authType, authToken)
+			if err == nil {
+				// Passed - don't continue
+				return nil
+			}
+			if k == (count - 1) {
+				// Last one has failed - fail all
+				return err
+			}
+			// Failed, but not the last one - continue to next one
+		}
+		return nil
+	}
+}
