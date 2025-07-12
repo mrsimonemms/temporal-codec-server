@@ -26,6 +26,8 @@
     }
   },
   "containerEnv": {
+    "BASIC_USERNAME": "username",
+    "BASIC_PASSWORD": "password",
     "CORS_ORIGINS": "http://localhost:8233,https://cloud.temporal.io",
     "DISABLE_AUTH": "true",
     "GIT_REPO": "github.com/mrsimonemms/temporal-codec-server",

@@ -16,8 +16,32 @@
 
 package auth
 
-import "fmt"
+import (
+	"encoding/base64"
+	"fmt"
+	"strings"
+)
 
-var ErrInvalidAuthType = fmt.Errorf("invalid authentication type")
+func HTTPBasic(username, password string) MiddlewareAuthFunction {
+	return func(authType, authToken string) error {
+		if authType == "Basic" {
+			value, err := base64.StdEncoding.DecodeString(authToken)
+			if err != nil {
+				return fmt.Errorf("unable to decode base64 string: %w", err)
+			}
 
-const TemporalIssuerURL = "https://login.tmprl.cloud/.well-known/jwks.json"
+			s := strings.Split(string(value), ":")
+			if len(s) != 2 {
+				return fmt.Errorf("incorrect format for basic token")
+			}
+
+			if username == s[0] && password == s[1] {
+				// Valid
+				return nil
+			}
+
+			return fmt.Errorf("invalid token")
+		}
+		return ErrInvalidAuthType
+	}
+}
