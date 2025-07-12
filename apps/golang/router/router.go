@@ -19,7 +19,6 @@
 package router
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -119,8 +118,6 @@ func (r *router) register() {
 		log.Debug().Msg("Add HTTP Basic authentication")
 		authFns = append(authFns, auth.HTTPBasic(r.cfg.BasicUsername, r.cfg.BasicPassword))
 	}
-	fmt.Println(r.cfg.BasicPassword)
-	fmt.Println(r.cfg.BasicUsername)
 
 	handlers := []fiber.Handler{
 		// Check if we should enforce authorisation
