@@ -23,6 +23,7 @@ import (
 	"io"
 	"maps"
 	"net/http"
+	"strings"
 	"time"
 
 	"go.temporal.io/api/common/v1"
@@ -98,7 +99,7 @@ func DataConverter(url string, customHeaders ...map[string]string) converter.Dat
 	}
 
 	return converter.NewCodecDataConverter(converter.GetDefaultDataConverter(), &remote{
-		url:     url,
+		url:     strings.TrimSuffix(url, "/"), // Trim trailing slash
 		headers: headers,
 		client: &http.Client{
 			Timeout: time.Second * 5,

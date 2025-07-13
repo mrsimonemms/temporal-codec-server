@@ -112,7 +112,7 @@ func (r *router) register() {
 
 	// Temporal endpoints
 	authFns := []auth.MiddlewareAuthFunction{
-		auth.JWKS,
+		auth.TemporalJWKS,
 	}
 	if r.cfg.BasicUsername != "" && r.cfg.BasicPassword != "" {
 		log.Debug().Msg("Add HTTP Basic authentication")
