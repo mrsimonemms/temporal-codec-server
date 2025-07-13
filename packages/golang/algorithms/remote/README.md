@@ -56,7 +56,18 @@ import (
 func main() {
   // The client is a heavyweight object that should be created once per process.
   c, err := client.Dial(client.Options{
-    DataConverter: remote.DataConverter("http://localhost:3000"), // Replace with the URL you want to use
+    DataConverter: remote.DataConverter(
+      // Replace with the URL you want to use
+      "http://localhost:3000",
+      // Add any HTTP headers to the calls
+      map[string]string{
+        // The server can support HTTP Basic headers with the BASIC_USERNAME/BASIC_PASSWORD
+        // headers - this is "username:password". This is useful if you want to
+        // have user authentication provided by Temporal Cloud, but want a way
+        // of allowing dev users access
+        "Authorization": "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
+      },
+    ),
   })
   if err != nil {
     panic(err)
