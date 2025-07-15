@@ -8,7 +8,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.8
 	github.com/gofiber/swagger v1.1.1
 	github.com/gofiber/template/html/v2 v2.1.3
-	github.com/mrsimonemms/temporal-codec-server/packages/golang v0.0.0-20250713135323-f1bc4756fb70
+	github.com/mrsimonemms/temporal-codec-server/packages/golang v0.0.0-20250715140727-0088cd63c563
 	github.com/prometheus/client_golang v1.22.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
