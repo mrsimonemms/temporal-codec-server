@@ -1,0 +1,84 @@
+name: Benchmarking
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+permissions:
+  deployments: write
+  contents: write
+jobs:
+  golang:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./packages/golang
+    env:
+      BASIC_USERNAME: username
+      BASIC_PASSWORD: password
+      CODEC_SERVER_ADDRESS: http://localhost:3000
+      CORS_ORIGINS: http://localhost:8233,https://cloud.temporal.io
+      DISABLE_AUTH: "true"
+      KEYS_PATH: ${{ github.workspace }}/keys.example.yaml
+      LOG_LEVEL: trace
+      TEMPORAL_ADDRESS: localhost:7233
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Temporal CLI
+        uses: temporalio/setup-temporal@v0
+
+      - name: Start a local Temporal server
+        shell: bash
+        run: temporal server start-dev --headless &
+
+      - name: "Go: Set up"
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Start codec server
+        working-directory: apps/golang
+        run: |
+          go install github.com/swaggo/swag/cmd/swag@latest
+          go generate ./...
+          nohup go run . &
+
+      - name: Wait until Codec Server running
+        run: |
+          until curl --output /dev/null --silent --fail ${CODEC_SERVER_ADDRESS}/livez; do
+            printf '.';
+            sleep 1;
+          done
+
+      - name: Run benchmarks and pretty display
+        run: |
+          go test -run=^$ -bench . -benchmem -benchtime=2s -cpu=1 -count=6 ./test/e2e > ../../output.txt
+
+          go install golang.org/x/perf/cmd/benchstat@latest
+
+          benchstat ../../output.txt
+
+      - name: Download previous benchmark data
+        uses: actions/cache@v4
+        with:
+          path: ./cache
+          key: ${{ runner.os }}-benchmark
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          # What benchmark tool the output.txt came from
+          tool: go
+          # Where the output from the benchmark tool is stored
+          output-file-path: output.txt
+          # Where the previous data file is stored
+          external-data-json-path: ./cache/benchmark-data.json
+          # Workflow will fail when an alert happens
+          fail-on-alert: true
+          # Access token to deploy GitHub Pages branch
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Push and deploy GitHub pages branch automatically
+          auto-push: ${{ github.ref == 'refs/heads/main' }}
