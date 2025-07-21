@@ -32,7 +32,7 @@ func Workflow(ctx workflow.Context, name string) (string, error) {
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
 	logger := workflow.GetLogger(ctx)
-	logger.Info("HelloWorld workflow started", "name", name)
+	logger.Info("HelloWorld workflow started")
 
 	var result string
 	err := workflow.ExecuteActivity(ctx, Activity, name).Get(ctx, &result)
@@ -41,13 +41,13 @@ func Workflow(ctx workflow.Context, name string) (string, error) {
 		return "", err
 	}
 
-	logger.Info("HelloWorld workflow completed.", "result", result)
+	logger.Info("HelloWorld workflow completed.")
 
 	return result, nil
 }
 
 func Activity(ctx context.Context, name string) (string, error) {
 	logger := activity.GetLogger(ctx)
-	logger.Info("Activity", "name", name)
+	logger.Info("Activity")
 	return "Hello " + name + "!", nil
 }

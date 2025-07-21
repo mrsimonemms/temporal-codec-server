@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import os
+import logging
 import uuid
 
 from temporalio import activity, workflow
@@ -25,7 +26,7 @@ class ComposeGreetingInput:
 # Basic activity that logs and does string concatenation
 @activity.defn
 def compose_greeting(input: ComposeGreetingInput) -> str:
-    activity.logger.info("Running activity with parameter %s" % input)
+    activity.logger.info("Running activity")
     return f"{input.greeting}, {input.name}!"
 
 
@@ -34,7 +35,7 @@ def compose_greeting(input: ComposeGreetingInput) -> str:
 class GreetingWorkflow:
     @workflow.run
     async def run(self, name: str) -> str:
-        workflow.logger.info("Running workflow with parameter %s" % name)
+        workflow.logger.info("Running workflow")
         return await workflow.execute_activity(
             compose_greeting,
             ComposeGreetingInput("Hello", name),
@@ -43,9 +44,7 @@ class GreetingWorkflow:
 
 
 async def main():
-    # Uncomment the lines below to see logging output
-    # import logging
-    # logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
 
     # Start client
     client = await Client.connect(
