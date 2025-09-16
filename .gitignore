@@ -24,3 +24,5 @@ go.work.sum
 
 __pycache__
 .venv
+
+output.txt
