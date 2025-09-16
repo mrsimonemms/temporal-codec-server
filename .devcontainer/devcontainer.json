@@ -4,7 +4,7 @@
   "features": {
     "ghcr.io/devcontainers-extra/features/nestjs-cli:2": {},
     "ghcr.io/azutake/devcontainer-features/go-packages-install:0": {
-      "PACKAGES": "github.com/cosmtrek/air@latest,google.golang.org/protobuf/cmd/protoc-gen-go@latest,google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest"
+      "PACKAGES": "golang.org/x/perf/cmd/benchstat@latest,github.com/cosmtrek/air@latest,google.golang.org/protobuf/cmd/protoc-gen-go@latest,google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest"
     },
     "ghcr.io/devcontainers-extra/features/protoc:1": {},
     "ghcr.io/mrsimonemms/devcontainers/buf:1": {},
