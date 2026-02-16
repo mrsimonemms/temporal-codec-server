@@ -17,6 +17,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -25,9 +26,12 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/template/html/v2"
+	gh "github.com/mrsimonemms/golang-helpers"
 	"github.com/mrsimonemms/temporal-codec-server/apps/golang/router"
 	"github.com/mrsimonemms/temporal-codec-server/apps/golang/views"
 	"github.com/mrsimonemms/temporal-codec-server/packages/golang/algorithms/aes"
+	"github.com/mrsimonemms/temporal-codec-server/packages/golang/algorithms/external"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -45,10 +49,19 @@ var rootOpts struct {
 	DisableCORS        bool
 	DisableSwagger     bool
 	EncryptionKeysPath string
+	EncryptionTypes    []string
+	ExternalExpiry     time.Duration
 	Host               string
 	LogLevel           string
 	Pause              time.Duration
 	Port               int
+	RedisURL           string
+	S3Region           string
+	S3Endpoint         string
+	S3BucketName       string
+	S3AccessKeyID      string
+	S3SecretAccessKey  string
+	S3UsePathStyle     bool
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -66,15 +79,14 @@ var rootCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		// Get the encryption keys
-		keys, err := aes.ReadKeyFile(rootOpts.EncryptionKeysPath)
+		codecs, err := loadCodecs(rootOpts.EncryptionTypes)
 		if err != nil {
-			log.Fatal().Err(err).Str("file path", rootOpts.EncryptionKeysPath).Msg("Unable to get keys from file")
+			log.Fatal().Err(err).Msg("Unable to load codecs")
 		}
 
 		// Create the encoders map for each namespace
 		encoders := map[string][]converter.PayloadCodec{
-			client.DefaultNamespace: {aes.NewPayloadCodec(keys)},
+			client.DefaultNamespace: codecs,
 		}
 
 		app := fiber.New(fiber.Config{
@@ -104,6 +116,65 @@ var rootCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("Error starting server")
 		}
 	},
+}
+
+func loadExternalCodec(t string) (connection external.Connection, err error) {
+	ctx := context.Background()
+	expiry := rootOpts.ExternalExpiry
+
+	switch t {
+	case "redis":
+		var opts *redis.Options
+		opts, err = redis.ParseURL(rootOpts.RedisURL)
+
+		if opts == nil {
+			opts = &redis.Options{}
+		}
+
+		connection, err = external.NewRedis(ctx, opts, expiry)
+	case "s3":
+		connection, err = external.NewS3(ctx, &external.S3Config{
+			Region:          rootOpts.S3Region,
+			Endpoint:        rootOpts.S3Endpoint,
+			BucketName:      rootOpts.S3BucketName,
+			AccessKeyID:     rootOpts.S3AccessKeyID,
+			SecretAccessKey: rootOpts.S3SecretAccessKey,
+			UsePathStyle:    rootOpts.S3UsePathStyle,
+		}, expiry)
+	default:
+		return nil, fmt.Errorf("unknown type: %s", t)
+	}
+	if err != nil {
+		log.Fatal().Err(err).Str("type", t).Msg("Error loading external connection")
+	}
+
+	return connection, nil
+}
+
+func loadCodecs(types []string) ([]converter.PayloadCodec, error) {
+	codecs := make([]converter.PayloadCodec, 0)
+
+	for _, t := range types {
+		switch t {
+		case "aes":
+			// Get the encryption keys
+			keys, err := aes.ReadKeyFile(rootOpts.EncryptionKeysPath)
+			if err != nil {
+				log.Fatal().Err(err).Str("file path", rootOpts.EncryptionKeysPath).Msg("Unable to get keys from file")
+			}
+			codecs = append(codecs, aes.NewPayloadCodec(keys))
+		case "redis", "s3":
+			connection, err := loadExternalCodec(t)
+			if err != nil {
+				log.Fatal().Err(err).Str("type", t).Msg("Error loading connection")
+			}
+			codecs = append(codecs, external.NewPayloadCodec(connection))
+		default:
+			return nil, fmt.Errorf("unknown codec type: %s", t)
+		}
+	}
+
+	return codecs, nil
 }
 
 func fiberErrorHandler(c *fiber.Ctx, err error) error {
@@ -212,6 +283,18 @@ func init() {
 		"Disable Swagger endpoint",
 	)
 
+	rootCmd.Flags().StringSliceVarP(
+		&rootOpts.EncryptionTypes,
+		"encryption-types", "t",
+		viper.GetStringSlice("encryption_types"),
+		"List of encryption types to load",
+	)
+
+	rootCmd.Flags().DurationVar(
+		&rootOpts.ExternalExpiry, "expires",
+		viper.GetDuration("expires"), "Record expiry for external codecs",
+	)
+
 	viper.SetDefault("keys_path", "")
 	rootCmd.Flags().StringVar(
 		&rootOpts.EncryptionKeysPath,
@@ -232,5 +315,43 @@ func init() {
 		"pause",
 		viper.GetDuration("pause"),
 		"Artificial pause before encoding and decoding endpoints are resolved",
+	)
+
+	rootCmd.Flags().StringVar(
+		&rootOpts.RedisURL, "redis-url",
+		viper.GetString("redis_url"), "Redis URL options for the external codec",
+	)
+	gh.HideCommandOutput(rootCmd, "redis-url")
+
+	rootCmd.Flags().StringVar(
+		&rootOpts.S3AccessKeyID, "s3-access-key-id",
+		viper.GetString("s3_access_key_id"), "S3 access key ID for the external codec",
+	)
+	gh.HideCommandOutput(rootCmd, "s3-access-key-id")
+
+	rootCmd.Flags().StringVar(
+		&rootOpts.S3BucketName, "s3-bucket-name",
+		viper.GetString("s3_bucket_name"), "S3 bucket name for the external codec",
+	)
+
+	rootCmd.Flags().StringVar(
+		&rootOpts.S3Endpoint, "s3-endpoint",
+		viper.GetString("s3_endpoint"), "S3 endpoint URL for the external codec",
+	)
+
+	rootCmd.Flags().StringVar(
+		&rootOpts.S3Region, "s3-region",
+		viper.GetString("s3_region"), "S3 region for the external codec",
+	)
+
+	rootCmd.Flags().StringVar(
+		&rootOpts.S3SecretAccessKey, "s3-secret-access-key",
+		viper.GetString("s3_secret_access_key"), "S3 secret access key for the external codec",
+	)
+	gh.HideCommandOutput(rootCmd, "s3-secret-access-key")
+
+	rootCmd.Flags().BoolVar(
+		&rootOpts.S3UsePathStyle, "s3-use-path-style",
+		viper.GetBool("s3_use_path_style"), "S3 connection uses path style for the external codec",
 	)
 }
