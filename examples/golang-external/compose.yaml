@@ -11,6 +11,8 @@ services:
     depends_on:
       redis:
         condition: service_started
+      s3:
+        condition: service_started
       temporal:
         condition: service_healthy
     command:
@@ -32,6 +34,15 @@ services:
     image: redis:alpine
     ports:
       - 6379:6379
+
+  s3:
+    image: rustfs/rustfs:latest
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      - RUSTFS_ACCESS_KEY=test
+      - RUSTFS_SECRET_KEY=test
 
   temporal:
     image: temporalio/temporal
