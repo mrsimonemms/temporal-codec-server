@@ -9,7 +9,7 @@ repos:
       - id: go-err-check
       - id: go-static-check
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: pretty-format-json
         args:
@@ -23,14 +23,14 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/bufbuild/buf
-    rev: v1.54.0
+    rev: v1.61.0
     hooks:
       - id: buf-lint
         entry: buf lint proto
       - id: buf-format
         entry: buf format -w --exit-code proto
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.2.0
+    rev: v4.3.0
     hooks:
       - id: conventional-pre-commit
         stages:
@@ -40,11 +40,11 @@ repos:
     hooks:
       - id: markdown-toc
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.18.1
+    rev: v0.20.0
     hooks:
       - id: markdownlint-cli2
   - repo: https://github.com/golangci/golangci-lint
-    rev: v2.1.6
+    rev: v2.7.2
     hooks:
       - id: golangci-lint
   - repo: https://github.com/mrsimonemms/toodaloo
