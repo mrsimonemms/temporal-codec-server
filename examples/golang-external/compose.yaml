@@ -1,0 +1,46 @@
+services:
+  worker: &worker
+    image: golang:alpine
+    environment:
+      CGO_ENABLED: 0
+      GOOS: linux
+      GOCACHE: /go/.cache
+      REDIS_ADDRESS: redis:6379
+      TEMPORAL_ADDRESS: temporal:7233
+    working_dir: /go/app/examples/golang-external/worker
+    depends_on:
+      redis:
+        condition: service_started
+      temporal:
+        condition: service_healthy
+    command:
+      - go
+      - run
+      - .
+    develop:
+      watch:
+        - path: ../../
+          action: sync+restart
+          target: /go/app
+          initial_sync: true
+
+  starter:
+    <<: *worker
+    working_dir: /go/app/examples/golang-external/starter
+
+  redis:
+    image: redis:alpine
+    ports:
+      - 6379:6379
+
+  temporal:
+    image: temporalio/temporal
+    ports:
+      - 7070:7233
+      - 8080:8233
+    command: server start-dev --ip 0.0.0.0 --search-attribute Step=text
+    healthcheck:
+      test: ["CMD-SHELL", "temporal operator cluster health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
