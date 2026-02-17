@@ -28,6 +28,12 @@ import (
 func LoadConnection(driver string) (external.Connection, error) {
 	ctx := context.Background()
 	switch driver {
+	case "mongodb":
+		return external.NewMongoDB(ctx, &external.MongoDBConfig{
+			DB:         os.Getenv("MONGODB_DB"),
+			Collection: os.Getenv("MONGODB_COLLECTION"),
+			URI:        os.Getenv("MONGODB_URL"),
+		})
 	case "redis":
 		return external.NewRedis(ctx, &redis.Options{
 			Addr: os.Getenv("REDIS_ADDRESS"),

@@ -30,6 +30,21 @@ services:
     <<: *worker
     working_dir: /go/app/examples/golang-external/starter
 
+  worker-mongo: &worker-mongo
+    <<: *worker
+    environment:
+      <<: *envvars
+      CONNECTION_DRIVER: mongodb
+      MONGODB_URL: mongodb://mongo:27017
+      MONGODB_COLLECTION: temporal
+      MONGODB_DB: db_name
+    links:
+      - mongo
+
+  starter-mongo:
+    <<: *worker-mongo
+    working_dir: /go/app/examples/golang-external/starter
+
   worker-s3: &worker-s3
     <<: *worker
     environment:
@@ -50,6 +65,11 @@ services:
         condition: service_completed_successfully
       temporal:
         condition: service_healthy
+
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017
 
   starter-s3:
     <<: *worker-s3

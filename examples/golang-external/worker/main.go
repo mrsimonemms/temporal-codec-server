@@ -31,7 +31,7 @@ func main() {
 	// Get the connection driver
 	connection, err := golang.LoadConnection(os.Getenv("CONNECTION_DRIVER"))
 	if err != nil {
-		log.Fatalln("Unable to get keys from file", err)
+		log.Fatalln("Error creating connection", err)
 	}
 	defer func() {
 		if err := connection.Close(); err != nil {
