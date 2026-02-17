@@ -1,7 +1,7 @@
 services:
-  worker: &worker
+  worker-redis: &worker
     image: golang:alpine
-    environment:
+    environment: &envvars
       CGO_ENABLED: 0
       GOOS: linux
       GOCACHE: /go/.cache
@@ -10,8 +10,6 @@ services:
     working_dir: /go/app/examples/golang-external/worker
     depends_on:
       redis:
-        condition: service_started
-      s3:
         condition: service_started
       temporal:
         condition: service_healthy
@@ -26,7 +24,7 @@ services:
           target: /go/app
           initial_sync: true
 
-  starter:
+  starter-redis:
     <<: *worker
     working_dir: /go/app/examples/golang-external/starter
 
