@@ -52,6 +52,9 @@ var rootOpts struct {
 	EncryptionTypes    []string
 	ExternalExpiry     time.Duration
 	Host               string
+	MongoDBName        string
+	MongoCollection    string
+	MongoURI           string
 	LogLevel           string
 	Pause              time.Duration
 	Port               int
@@ -123,6 +126,12 @@ func loadExternalCodec(t string) (connection external.Connection, err error) {
 	expiry := rootOpts.ExternalExpiry
 
 	switch t {
+	case "mongodb":
+		connection, err = external.NewMongoDB(ctx, &external.MongoDBConfig{
+			DB:         rootOpts.MongoDBName,
+			Collection: rootOpts.MongoCollection,
+			URI:        rootOpts.MongoURI,
+		}, expiry)
 	case "redis":
 		var opts *redis.Options
 		opts, err = redis.ParseURL(rootOpts.RedisURL)
@@ -163,7 +172,7 @@ func loadCodecs(types []string) ([]converter.PayloadCodec, error) {
 				log.Fatal().Err(err).Str("file path", rootOpts.EncryptionKeysPath).Msg("Unable to get keys from file")
 			}
 			codecs = append(codecs, aes.NewPayloadCodec(keys))
-		case "redis", "s3":
+		case "mongodb", "redis", "s3":
 			connection, err := loadExternalCodec(t)
 			if err != nil {
 				log.Fatal().Err(err).Str("type", t).Msg("Error loading connection")
@@ -305,6 +314,23 @@ func init() {
 
 	viper.SetDefault("host", "")
 	rootCmd.Flags().StringVarP(&rootOpts.Host, "host", "H", viper.GetString("host"), "Server listen host")
+
+	rootCmd.Flags().StringVar(
+		&rootOpts.MongoDBName, "mongo-db-name",
+		viper.GetString("mongo_db_name"), "Mongo database name - required if not in URI",
+	)
+
+	viper.SetDefault("mongo_collection", "temporal")
+	rootCmd.Flags().StringVar(
+		&rootOpts.MongoCollection, "mongo-collection",
+		viper.GetString("mongo_collection"), "Mongo collection name",
+	)
+
+	rootCmd.Flags().StringVar(
+		&rootOpts.MongoURI, "mongo-uri",
+		viper.GetString("mongo_url"), "Mongo URI - should start with mongodb:// or mongodb+srv://",
+	)
+	gh.HideCommandOutput(rootCmd, "mongo-uri")
 
 	viper.SetDefault("port", 3000)
 	rootCmd.Flags().IntVarP(&rootOpts.Port, "port", "p", viper.GetInt("port"), "Server listen port")

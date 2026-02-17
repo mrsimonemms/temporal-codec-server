@@ -1,18 +1,18 @@
 services:
-  worker: &worker
+  worker-redis: &worker
     image: golang:alpine
-    environment:
+    environment: &envvars
       CGO_ENABLED: 0
       GOOS: linux
       GOCACHE: /go/.cache
-      REDIS_ADDRESS: redis:6379
       TEMPORAL_ADDRESS: temporal:7233
+      # Override this
+      CONNECTION_DRIVER: redis
+      REDIS_ADDRESS: redis:6379
     working_dir: /go/app/examples/golang-external/worker
+    links:
+      - redis
     depends_on:
-      redis:
-        condition: service_started
-      s3:
-        condition: service_started
       temporal:
         condition: service_healthy
     command:
@@ -26,8 +26,53 @@ services:
           target: /go/app
           initial_sync: true
 
-  starter:
+  starter-redis:
     <<: *worker
+    working_dir: /go/app/examples/golang-external/starter
+
+  worker-mongo: &worker-mongo
+    <<: *worker
+    environment:
+      <<: *envvars
+      CONNECTION_DRIVER: mongodb
+      MONGODB_URL: mongodb://mongo:27017
+      MONGODB_COLLECTION: temporal
+      MONGODB_DB: db_name
+    links:
+      - mongo
+
+  starter-mongo:
+    <<: *worker-mongo
+    working_dir: /go/app/examples/golang-external/starter
+
+  worker-s3: &worker-s3
+    <<: *worker
+    environment:
+      <<: *envvars
+      CONNECTION_DRIVER: s3
+      S3_REGION: us-east-1
+      S3_ENDPOINT: http://s3:9000
+      S3_BUCKETNAME: my-bucket
+      S3_ACCESS_KEY_ID: test
+      S3_SECRET_ACCESS_KEY: test
+      S3_USE_PATH_STYLE: true
+    links:
+      - s3
+    depends_on:
+      s3:
+        condition: service_started
+      s3-init:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_healthy
+
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017
+
+  starter-s3:
+    <<: *worker-s3
     working_dir: /go/app/examples/golang-external/starter
 
   redis:
@@ -35,14 +80,26 @@ services:
     ports:
       - 6379:6379
 
+  s3-init:
+    image: amazon/aws-cli
+    depends_on:
+      - s3
+    restart: on-failure
+    command: --endpoint-url=http://s3:9000 --region us-east-1 s3 mb s3://my-bucket
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+
   s3:
-    image: rustfs/rustfs:latest
+    image: rustfs/rustfs
     ports:
       - 9000:9000
       - 9001:9001
     environment:
-      - RUSTFS_ACCESS_KEY=test
-      - RUSTFS_SECRET_KEY=test
+      RUSTFS_ACCESS_KEY: test
+      RUSTFS_SECRET_KEY: test
+      RUSTFS_CONSOLE_ENABLE: true
 
   temporal:
     image: temporalio/temporal

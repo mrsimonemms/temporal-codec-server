@@ -27,6 +27,7 @@ type Connection interface {
 
 // Check the DB types meet the interface definition
 var (
+	_ Connection = &MongoDB{}
 	_ Connection = &Redis{}
 	_ Connection = &S3{}
 )

@@ -25,25 +25,18 @@ import (
 
 	"github.com/mrsimonemms/golang-helpers/temporal"
 	"github.com/mrsimonemms/temporal-codec-server/packages/golang/algorithms/external"
-	"github.com/redis/go-redis/v9"
 	"go.temporal.io/sdk/client"
 )
 
 func main() {
-	// Connect to Redis
-	redisAddress := "localhost:6379"
-	if r, ok := os.LookupEnv("REDIS_ADDRESS"); ok {
-		redisAddress = r
-	}
-	connection, err := external.NewRedis(context.Background(), &redis.Options{
-		Addr: redisAddress,
-	})
+	// Get the connection driver
+	connection, err := golang.LoadConnection(os.Getenv("CONNECTION_DRIVER"))
 	if err != nil {
-		log.Fatalln("Unable to get keys from file", err)
+		log.Fatalln("Error creating connection", err)
 	}
 	defer func() {
 		if err := connection.Close(); err != nil {
-			log.Println("Error closing Redis connect", err)
+			log.Println("Error closing external connection", err)
 		}
 	}()
 
