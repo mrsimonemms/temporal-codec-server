@@ -35,6 +35,9 @@ config:
   disableCors: false
   # -- Disable Swagger
   disableSwagger: false
+  # -- Encryption Types
+  encryptionTypes:
+    - aes
   # -- Log level
   logLevel: info
   # -- Pause before resolving the /decode and /encode endpoints

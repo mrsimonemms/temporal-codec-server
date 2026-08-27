@@ -64,6 +64,10 @@ spec:
             {{- if .Values.config.disableSwagger }}
             - --disable-swagger
             {{- end }}
+            {{- if (gt (len .Values.config.encryptionTypes) 0) }}
+            - --encryption-types
+            - {{ join "," .Values.config.encryptionTypes }}
+            {{- end }}
             - --keys-path
             - /etc/keys/encryption-keys
             - --log-level

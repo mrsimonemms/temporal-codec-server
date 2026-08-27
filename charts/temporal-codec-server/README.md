@@ -20,6 +20,7 @@ Deploy Temporal Codec Server
 | config.disableAuth | bool | `false` | Disable authentication |
 | config.disableCors | bool | `false` | Disable CORS |
 | config.disableSwagger | bool | `false` | Disable Swagger |
+| config.encryptionTypes | list | `["aes"]` | Encryption Types |
 | config.logLevel | string | `"info"` | Log level |
 | config.pause | string | `"0s"` | Pause before resolving the /decode and /encode endpoints |
 | env | list | `[]` |  |
