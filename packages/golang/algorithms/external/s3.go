@@ -108,7 +108,8 @@ func NewS3(ctx context.Context, s3cfg *S3Config, expiration ...time.Duration) (*
 		)
 	} else {
 		// Use the default chain
-		cfg, err = config.LoadDefaultConfig(ctx,
+		cfg, err = config.LoadDefaultConfig(
+			ctx,
 			config.WithRegion(s3cfg.Region),
 		)
 	}
