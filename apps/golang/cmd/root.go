@@ -154,19 +154,29 @@ func loadExternalCodec(t string) (connection external.Connection, err error) {
 func loadCodecs(types []string) ([]converter.PayloadCodec, error) {
 	codecs := make([]converter.PayloadCodec, 0)
 
+	l := log.With().Interface("types", types).Logger()
+
+	if len(types) == 0 {
+		l.Warn().Msg("No encryption types loaded")
+	} else {
+		l.Debug().Msg("Encryption types")
+	}
+
 	for _, t := range types {
 		switch t {
 		case "aes":
 			// Get the encryption keys
 			keys, err := aes.ReadKeyFile(rootOpts.EncryptionKeysPath)
 			if err != nil {
-				log.Fatal().Err(err).Str("file path", rootOpts.EncryptionKeysPath).Msg("Unable to get keys from file")
+				l.Error().Err(err).Str("file path", rootOpts.EncryptionKeysPath).Msg("Unable to get keys from file")
+				return nil, fmt.Errorf("unable to get keys from file: %w", err)
 			}
 			codecs = append(codecs, aes.NewPayloadCodec(keys))
 		case "redis", "s3":
 			connection, err := loadExternalCodec(t)
 			if err != nil {
-				log.Fatal().Err(err).Str("type", t).Msg("Error loading connection")
+				l.Error().Err(err).Str("type", t).Msg("Error loading connection")
+				return nil, fmt.Errorf("error loading connection: %w", err)
 			}
 			codecs = append(codecs, external.NewPayloadCodec(connection))
 		default:
