@@ -17,7 +17,7 @@ jobs:
   commitlint:
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+      GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,8 +28,8 @@ jobs:
   list_components:
     runs-on: ubuntu-latest
     outputs:
-      all: '${{ steps.list.outputs.all }}'
-      apps: '${{ steps.list.outputs.apps }}'
+      all: "${{ steps.list.outputs.all }}"
+      apps: "${{ steps.list.outputs.apps }}"
     steps:
       - uses: actions/checkout@v4
 
@@ -164,10 +164,10 @@ jobs:
     if: ${{ needs.list_components.outputs.all != '' && toJson(fromJson(needs.list_components.outputs.all).component) != '[]' }}
     strategy:
       fail-fast: true
-      matrix: '${{ fromJson(needs.list_components.outputs.all) }}'
+      matrix: "${{ fromJson(needs.list_components.outputs.all) }}"
     defaults:
       run:
-        working-directory: './${{ matrix.component }}'
+        working-directory: "./${{ matrix.component }}"
     steps:
       - uses: actions/checkout@v4
 
@@ -241,7 +241,7 @@ jobs:
     if: ${{ needs.list_components.outputs.apps != '' && toJson(fromJson(needs.list_components.outputs.apps).component) != '[]' }}
     strategy:
       fail-fast: true
-      matrix: '${{ fromJson(needs.list_components.outputs.apps) }}'
+      matrix: "${{ fromJson(needs.list_components.outputs.apps) }}"
     steps:
       - uses: actions/checkout@v4
 
@@ -265,8 +265,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: '${{ github.actor }}'
-          password: '${{ secrets.GITHUB_TOKEN }}'
+          username: "${{ github.actor }}"
+          password: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Get branch names
         id: branch-name
@@ -341,6 +341,7 @@ jobs:
     needs:
       - commitlint
       - pre-commit
+    if: startsWith(github.event.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
 
@@ -353,20 +354,8 @@ jobs:
       - name: Get tag
         id: tag
         run: |
-          if [ "${{ steps.branch-name.outputs.is_tag }}" = "true"  ];
-          then
-            echo "app_version=${{ steps.branch-name.outputs.tag }}" >> "$GITHUB_OUTPUT"
-            echo "tag=${{ steps.branch-name.outputs.tag }}" >> "$GITHUB_OUTPUT"
-          else
-            APP_VERSION="branch-${{ steps.branch-name.outputs.current_branch }}"
-            # Change "/" for "-"
-            APP_VERSION="${APP_VERSION//\//-}"
-            # Set to lowercase
-            APP_VERSION="${APP_VERSION,,}"
-
-            echo "app_version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
-            echo "tag=0.0.0-${APP_VERSION}" >> "$GITHUB_OUTPUT"
-          fi
+          echo "app_version=${{ steps.branch-name.outputs.tag }}" >> "$GITHUB_OUTPUT"
+          echo "tag=${{ steps.branch-name.outputs.tag }}" >> "$GITHUB_OUTPUT"
 
       - name: Publish chart
         uses: appany/helm-oci-chart-releaser@v0.4.2
