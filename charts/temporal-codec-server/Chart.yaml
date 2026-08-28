@@ -3,3 +3,10 @@ name: temporal-codec-server
 description: Deploy Temporal Codec Server
 type: application
 version: 1.0.0
+home: https://github.com/mrsimonemms/temporal-codec-server
+maintainers:
+  - name: Simon Emms
+    email: simon@simonemms.com
+    url: https://simonemms.com
+sources:
+  - https://github.com/mrsimonemms/temporal-codec-server

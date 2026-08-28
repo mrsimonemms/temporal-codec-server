@@ -4,6 +4,31 @@
 
 Deploy Temporal Codec Server
 
+## Installing the Chart
+
+```shell
+helm upgrade \
+  --cleanup-on-fail \
+  --create-namespace \
+  --install \
+  --namespace codec \
+  --reset-then-reuse-values \
+  --wait \
+  temporal-codec-server oci://ghcr.io/mrsimonemms/charts/temporal-codec-server
+```
+
+**Homepage:** <https://github.com/mrsimonemms/temporal-codec-server>
+
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| Simon Emms | <simon@simonemms.com> | <https://simonemms.com> |
+
+## Source Code
+
+* <https://github.com/mrsimonemms/temporal-codec-server>
+
 ## Values
 
 | Key | Type | Default | Description |

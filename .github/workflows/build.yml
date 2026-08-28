@@ -358,11 +358,11 @@ jobs:
           echo "tag=${{ steps.branch-name.outputs.tag }}" >> "$GITHUB_OUTPUT"
 
       - name: Publish chart
-        uses: appany/helm-oci-chart-releaser@v0.4.2
+        uses: appany/helm-oci-chart-releaser@v0.5.0
         with:
           name: temporal-codec-server
           app_version: ${{ steps.tag.outputs.app_version }}
-          repository: ${{ github.repository_owner }}
+          repository: ${{ github.repository_owner }}/charts
           tag: ${{ steps.tag.outputs.tag }}
           registry: ghcr.io
           registry_username: ${{ github.actor }}
