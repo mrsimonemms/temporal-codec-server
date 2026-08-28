@@ -80,7 +80,7 @@ func (r *router) register() {
 
 		r.app.Use(cors.New(cors.Config{
 			AllowCredentials: r.cfg.CORSAllowCreds,
-			AllowHeaders:     "Authorization,Content-Type,X-Namespace",
+			AllowHeaders:     "Authorization,Authorization-Extras,Content-Type,X-Namespace",
 			AllowOrigins:     r.cfg.CORSOrigins,
 		}))
 	}
