@@ -22,7 +22,7 @@ jobs:
       LOG_LEVEL: trace
       TEMPORAL_ADDRESS: localhost:7233
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Temporal CLI
         uses: temporalio/setup-temporal@v0
@@ -32,7 +32,7 @@ jobs:
         run: temporal server start-dev --headless &
 
       - name: "Go: Set up"
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: stable
 
@@ -59,7 +59,7 @@ jobs:
           benchstat ../../output.txt
 
       - name: Download previous benchmark data
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ./cache
           key: ${{ runner.os }}-benchmark
