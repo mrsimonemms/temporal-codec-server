@@ -19,7 +19,7 @@ jobs:
     env:
       GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # fetch-depth is required
 
@@ -31,9 +31,9 @@ jobs:
       all: "${{ steps.list.outputs.all }}"
       apps: "${{ steps.list.outputs.apps }}"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filtered
         if: ${{ !startsWith(github.event.ref, 'refs/tags/') }}
         with:
@@ -93,12 +93,12 @@ jobs:
           cat /tmp/apps.yaml
 
       - name: "Go: Set up"
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: "JS: Setup"
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
 
@@ -119,12 +119,12 @@ jobs:
           rm -Rf apps/**/node_modules
           rm -Rf packages/**/node_modules
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: apps-proto
           path: apps/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: packages-proto
           path: packages/
@@ -132,21 +132,21 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # fetch-depth is required
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: 3.x
 
       - name: Set up JS
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
 
@@ -169,14 +169,14 @@ jobs:
       run:
         working-directory: "./${{ matrix.component }}"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: apps-proto
           path: apps
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: packages-proto
           path: packages
@@ -193,7 +193,7 @@ jobs:
       # Golang checks
       - name: "Go: Set up"
         if: steps.lang.outputs.lang == 'go'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
@@ -215,12 +215,12 @@ jobs:
 
       - name: golangci-lint
         if: steps.lang.outputs.lang == 'go'
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
 
       # JS checks
       - name: "JS: Setup"
         if: steps.lang.outputs.lang == 'js'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
 
@@ -243,26 +243,26 @@ jobs:
       fail-fast: true
       matrix: "${{ fromJson(needs.list_components.outputs.apps) }}"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: apps-proto
           path: apps
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: packages-proto
           path: packages
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: "${{ github.actor }}"
@@ -270,7 +270,7 @@ jobs:
 
       - name: Get branch names
         id: branch-name
-        uses: tj-actions/branch-names@v8
+        uses: tj-actions/branch-names@v9
         with:
           strip_tag_prefix: v
 
@@ -323,7 +323,7 @@ jobs:
           echo "gitRepo=github.com/${GITHUB_REPOSITORY}/apps/${{ matrix.component }}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           build-args: |
             APP=${{ matrix.component }}
@@ -343,11 +343,11 @@ jobs:
       - pre-commit
     if: startsWith(github.event.ref, 'refs/tags/v')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Get branch names
         id: branch-name
-        uses: tj-actions/branch-names@v8
+        uses: tj-actions/branch-names@v9
         with:
           strip_tag_prefix: v
 
@@ -380,21 +380,21 @@ jobs:
       - build
     if: startsWith(github.event.ref, 'refs/tags/v')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: 3.x
 
       - name: Configure UV
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           activate-environment: true
           working-directory: ./packages/python
 
       - name: Get branch names
         id: branch-name
-        uses: tj-actions/branch-names@v8
+        uses: tj-actions/branch-names@v9
         with:
           strip_tag_prefix: v
 
@@ -420,13 +420,13 @@ jobs:
       id-token: write
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
 
       - name: Get branch names
         id: branch-name
-        uses: tj-actions/branch-names@v8
+        uses: tj-actions/branch-names@v9
         with:
           strip_tag_prefix: v
 
