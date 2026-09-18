@@ -30,6 +30,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.temporal.io/sdk/converter"
 
+	appauth "github.com/mrsimonemms/temporal-codec-server/apps/golang/auth"
 	_ "github.com/mrsimonemms/temporal-codec-server/apps/golang/docs"
 	"github.com/mrsimonemms/temporal-codec-server/packages/golang/auth"
 )
@@ -112,7 +113,10 @@ func (r *router) register() {
 
 	// Temporal endpoints
 	authFns := []auth.MiddlewareAuthFunction{
+		// Temporal Cloud's fixed JWKS endpoint
 		auth.TemporalJWKS,
+		// Any OIDC issuer this server trusts, including self-hosted deployments
+		appauth.TrustedIssuers,
 	}
 	if r.cfg.BasicUsername != "" && r.cfg.BasicPassword != "" {
 		log.Debug().Msg("Add HTTP Basic authentication")
