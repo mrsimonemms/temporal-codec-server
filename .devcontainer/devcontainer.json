@@ -40,5 +40,10 @@
   "postStartCommand": {
     "installAir": "go install github.com/air-verse/air@latest",
     "installSwaggo": "go install github.com/swaggo/swag/cmd/swag@latest"
-  }
+  },
+  "forwardPorts": [
+    7233,
+    8080,
+    8233
+  ]
 }

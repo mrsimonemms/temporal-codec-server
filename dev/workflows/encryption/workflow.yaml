@@ -1,0 +1,26 @@
+document:
+  dsl: 1.0.0
+  taskQueue: zigflow
+  workflowType: encryption
+  version: 0.0.1
+  title: Hello World
+  summary: Hello world with Zigflow
+  metadata:
+    display: false
+input:
+  schema:
+    format: json
+    document:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+do:
+  - set:
+      output:
+        as:
+          data: ${ . }
+      set:
+        message: ${ "Hello from " + $input.name }
