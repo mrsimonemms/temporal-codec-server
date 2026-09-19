@@ -17,13 +17,9 @@
 package router
 
 import (
-	"net/http"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/adaptor"
-	"github.com/rs/zerolog"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/adaptor"
 	"go.temporal.io/sdk/client"
-	"go.temporal.io/sdk/converter"
 )
 
 // Define the types for Swagger
@@ -51,48 +47,25 @@ type Payload struct {
 // @Router		/{namespace}/encode [post]
 // @Param		payload	body	Payloads	true	"Encoded payload data"
 // @Success		200	{object}	Payloads
-func (r *router) codecConverter(c *fiber.Ctx) error {
-	log := c.Locals("logger").(zerolog.Logger)
-	encoders := r.cfg.Encoders
+func (r *router) codecConverter(c fiber.Ctx) error {
+	log := GetLogger(c)
+	codecHandlers := r.cfg.GetCodecHandlers()
+	namespace := c.Params("namespace")
 
-	codecHandlers := make(map[string]http.Handler, len(encoders))
-	for namespace, codecChain := range encoders {
-		log.Debug().Str("namespace", namespace).Msg("Implementing codec hancler")
-
-		handler := converter.NewPayloadCodecHTTPHandler(codecChain...)
-
-		codecHandlers[namespace] = handler
+	if namespace == "" {
+		namespace = c.Get("X-Namespace")
 	}
 
-	// Get the namespace - use the default namespace unless told otherwise
-	namespace := client.DefaultNamespace
-	if nsp := c.Params("namespace"); nsp != "" {
-		// Set by route - this cannot be changed
-		log.Debug().Str("namespace", nsp).Msg("Namespace set by route")
-		namespace = nsp
-	} else {
-		// Namespace not set by the route - first look for an x-namespace parameter
-		log.Debug().Msg("No namespace set in the route - searching for header")
-		namespaceHeader := c.Get("X-Namespace")
-		if namespaceHeader != "" {
-			// Does the namespace in the header have a configured codec handler?
-			log.Debug().Msg("X-Namespace header is set - looking for hander")
-			if _, ok := codecHandlers[namespaceHeader]; ok {
-				log.Debug().Msg("Using namespace in X-Namespace header")
-				namespace = namespaceHeader
-			}
-		}
+	if namespace == "" {
+		namespace = client.DefaultNamespace
 	}
 
-	log = log.With().Str("namespace", namespace).Logger()
-
-	log.Debug().Msg("Finding codec handler")
 	handler, ok := codecHandlers[namespace]
 	if !ok {
 		log.Error().Msg("Unknown namespace")
 		return fiber.ErrNotFound
 	}
 
-	log.Debug().Msg("Executing codec handler")
+	log.Debug().Str("namespace", namespace).Msg("Executing codec handler")
 	return adaptor.HTTPHandler(handler)(c)
 }

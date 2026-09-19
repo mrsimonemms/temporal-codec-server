@@ -17,10 +17,9 @@
 package router
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/adaptor"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/adaptor"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/rs/zerolog"
 )
 
 // Health check godoc
@@ -33,8 +32,8 @@ import (
 // @Failure		503 "Service Unavailable"
 // @Router		/livez [get]
 // @Router		/readyz [get]
-func (r *router) healthcheckProbe(c *fiber.Ctx) bool {
-	log := c.Locals("logger").(zerolog.Logger)
+func (r *router) healthcheckProbe(c fiber.Ctx) bool {
+	log := GetLogger(c)
 
 	log.Debug().Msg("Service healthy")
 	return true

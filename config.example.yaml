@@ -1,0 +1,4 @@
+encryption:
+  keysPath: "${PWD}/../../keys.example.yaml"
+server:
+  port: 3000

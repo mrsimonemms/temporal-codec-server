@@ -26,13 +26,9 @@
     }
   },
   "containerEnv": {
-    "BASIC_USERNAME": "username",
-    "BASIC_PASSWORD": "password",
-    "CODEC_SERVER_ADDRESS": "http://localhost:3000",
-    "CORS_ORIGINS": "http://localhost:8233,https://cloud.temporal.io",
+    "CONFIG_PATH": "/workspaces/temporal-codec-server/config.example.yaml",
     "DISABLE_AUTH": "true",
     "GIT_REPO": "github.com/mrsimonemms/temporal-codec-server",
-    "KEYS_PATH": "/workspaces/temporal-codec-server/keys.example.yaml",
     "LOG_LEVEL": "trace",
     "TEMPORAL_ADDRESS": "localhost:7233",
     "UV_LINK_MODE": "copy"
