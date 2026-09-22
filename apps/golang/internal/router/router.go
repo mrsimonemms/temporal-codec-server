@@ -19,24 +19,26 @@
 package router
 
 import (
-	"time"
+	"net/http"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/healthcheck"
-	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"github.com/gofiber/swagger"
+	swaggo "github.com/gofiber/contrib/v3/swaggo"
+	fiberlogger "github.com/gofiber/contrib/v3/zerolog"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+	"github.com/gofiber/fiber/v3/middleware/healthcheck"
+	"github.com/gofiber/fiber/v3/middleware/recover"
+	"github.com/gofiber/fiber/v3/middleware/requestid"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.temporal.io/sdk/converter"
 
-	_ "github.com/mrsimonemms/temporal-codec-server/apps/golang/docs"
+	_ "github.com/mrsimonemms/temporal-codec-server/apps/golang/internal/docs"
 	"github.com/mrsimonemms/temporal-codec-server/packages/golang/auth"
 )
 
 type router struct {
 	app *fiber.App
-	cfg Config
+	cfg *Config
 }
 
 // @title Temporal Codec Server
@@ -54,15 +56,24 @@ func (r *router) register() {
 	r.app.
 		// Add a request ID to each HTTP call
 		Use(requestid.New()).
+		Use(fiberlogger.New(fiberlogger.Config{
+			Logger: &log.Logger,
+			Fields: []string{"latency", "status", "method", "url", "error"},
+			GetLogger: func(c fiber.Ctx) zerolog.Logger {
+				return log.With().
+					Str("requestid", requestid.FromContext(c)).
+					Logger()
+			},
+		})).
 		// Log each endpoint and inject into context
-		Use(func(c *fiber.Ctx) error {
+		Use(func(c fiber.Ctx) error {
 			l := log.With().
-				Interface("requestid", c.Locals(requestid.ConfigDefault.ContextKey)).
+				Str("requestid", requestid.FromContext(c)).
 				Str("method", c.Method()).
 				Bytes("url", c.Request().URI().Path()). // Avoid logging any sensitive credentials
 				Logger()
 
-			c.Locals("logger", l)
+			c.Locals(loggerKey, l)
 
 			l.Debug().Msg("New route called")
 
@@ -75,13 +86,22 @@ func (r *router) register() {
 		// Enable CORS configuration
 		log.Debug().
 			Bool("allow creds", r.cfg.CORSAllowCreds).
-			Str("origins", r.cfg.CORSOrigins).
+			Strs("origins", r.cfg.CORSOrigins).
 			Msg("Enabling CORS")
 
 		r.app.Use(cors.New(cors.Config{
 			AllowCredentials: r.cfg.CORSAllowCreds,
-			AllowHeaders:     "Authorization,Content-Type,X-Namespace",
-			AllowOrigins:     r.cfg.CORSOrigins,
+			AllowHeaders: []string{
+				"Authorization",
+				"Content-Type",
+				"X-Namespace",
+			},
+			AllowMethods: []string{
+				fiber.MethodGet,
+				fiber.MethodPost,
+				fiber.MethodOptions,
+			},
+			AllowOrigins: r.cfg.CORSOrigins,
 		}))
 	}
 
@@ -91,11 +111,11 @@ func (r *router) register() {
 
 	if r.cfg.EnableSwagger {
 		log.Debug().Msg("Adding Swagger endpoints")
-		r.app.Get("api/*", swagger.HandlerDefault)
+		r.app.Get("api/*", swaggo.HandlerDefault)
 	}
 
 	// Webpages
-	r.app.Get("/", func(c *fiber.Ctx) error {
+	r.app.Get("/", func(c fiber.Ctx) error {
 		return c.Render("index", fiber.Map{
 			"EnableSwagger": r.cfg.EnableSwagger,
 			"Version":       r.cfg.Version,
@@ -104,9 +124,11 @@ func (r *router) register() {
 	})
 
 	// Health and observability checks
-	r.app.Use(healthcheck.New(healthcheck.Config{
-		LivenessProbe:  r.healthcheckProbe,
-		ReadinessProbe: r.healthcheckProbe,
+	r.app.Use(healthcheck.LivenessEndpoint, healthcheck.New(healthcheck.Config{
+		Probe: r.healthcheckProbe,
+	}))
+	r.app.Use(healthcheck.ReadinessEndpoint, healthcheck.New(healthcheck.Config{
+		Probe: r.healthcheckProbe,
 	}))
 	r.app.Get("/metrics", r.metrics())
 
@@ -122,32 +144,60 @@ func (r *router) register() {
 	handlers := []fiber.Handler{
 		// Check if we should enforce authorisation
 		r.middlewareAuth(auth.OneOf(authFns...)),
-		// Add a delay to calls - useful to demonstrate that calls are made in the client only
-		r.middlewareAddDelay,
 		// Codec converter handler
 		r.codecConverter,
 	}
+	first, rest := toVariadic(handlers)
+
 	r.app.
-		Post("/decode", handlers...).
-		Post("/encode", handlers...).
-		Post("/:namespace/decode", handlers...).
-		Post("/:namespace/encode", handlers...)
+		Post("/decode", first, rest...).
+		Post("/encode", first, rest...).
+		Post("/:namespace/decode", first, rest...).
+		Post("/:namespace/encode", first, rest...)
+}
+
+func toVariadic(handlers []fiber.Handler) (any, []any) {
+	rest := make([]any, len(handlers)-1)
+	for i, h := range handlers[1:] {
+		rest[i] = h
+	}
+	return handlers[0], rest
 }
 
 type Config struct {
 	BasicUsername  string
 	BasicPassword  string
 	CORSAllowCreds bool
-	CORSOrigins    string
+	CORSOrigins    []string
 	EnableAuth     bool
 	EnableCORS     bool
 	EnableSwagger  bool
 	Encoders       map[string][]converter.PayloadCodec
-	Pause          time.Duration
 	Version        string
+
+	codecHandlers map[string]http.Handler
 }
 
-func New(app *fiber.App, cfg Config) *router {
+func (c *Config) buildCodecHandlers() {
+	encoders := c.Encoders
+
+	c.codecHandlers = make(map[string]http.Handler, len(encoders))
+	for namespace, codecChain := range encoders {
+		log.Debug().Str("namespace", namespace).Msg("Implementing codec handler")
+
+		handler := converter.NewPayloadCodecHTTPHandler(codecChain...)
+
+		c.codecHandlers[namespace] = handler
+	}
+}
+
+func (c *Config) GetCodecHandlers() map[string]http.Handler {
+	return c.codecHandlers
+}
+
+func New(app *fiber.App, cfg *Config) *router {
+	cfg.buildCodecHandlers()
+
 	r := &router{
 		app: app,
 		cfg: cfg,

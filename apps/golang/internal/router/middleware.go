@@ -18,30 +18,17 @@ package router
 
 import (
 	"strings"
-	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/mrsimonemms/temporal-codec-server/packages/golang/auth"
-	"github.com/rs/zerolog"
 )
 
-func (r *router) middlewareAddDelay(c *fiber.Ctx) error {
-	log := c.Locals("logger").(zerolog.Logger).With().Dur("delay", r.cfg.Pause).Logger()
-
-	if r.cfg.Pause > 0 {
-		log.Debug().Msg("Pausing before resolving endpoints")
-		time.Sleep(r.cfg.Pause)
-		log.Debug().Msg("Pause ending")
-	}
-	return c.Next()
-}
-
 // Ensure that only authorised users can access
-func (r *router) middlewareAuth(authFN auth.MiddlewareAuthFunction) func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
-		log := c.Locals("logger").(zerolog.Logger)
+func (r *router) middlewareAuth(authFN auth.MiddlewareAuthFunction) func(c fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
+		log := GetLogger(c)
 
-		if strings.HasSuffix(c.OriginalURL(), "/encode") {
+		if strings.HasSuffix(c.Path(), "/encode") {
 			log.Debug().Msg("Authorisation not enabled for encode endpoints")
 			return c.Next()
 		}

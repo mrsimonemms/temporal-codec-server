@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package external
+package cmd
 
-import "github.com/google/uuid"
+import "github.com/spf13/cobra"
 
-type Connection interface {
-	Close() error
-	GetTypeID() string
-	Get(key uuid.UUID) (value []byte, err error)
-	Save(key uuid.UUID, value []byte) error
+func newConfigCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "config",
+		Short: "Run config commands",
+	}
+
+	cmd.AddCommand(newConfigInitCmd())
+
+	return cmd
 }
-
-// Check the DB types meet the interface definition
-var (
-	_ Connection = &Redis{}
-	_ Connection = &S3{}
-)

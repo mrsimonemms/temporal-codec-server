@@ -37,9 +37,7 @@ func ReadKeyFile(filepath string) (Keys, error) {
 		return nil, fmt.Errorf("error opening file: %w", err)
 	}
 	defer func() {
-		if err := jsonFile.Close(); err != nil {
-			err = fmt.Errorf("error closing file: %w", err)
-		}
+		_ = jsonFile.Close()
 	}()
 
 	byteValue, err := io.ReadAll(jsonFile)
@@ -56,5 +54,5 @@ func ReadKeyFile(filepath string) (Keys, error) {
 		return nil, fmt.Errorf("at least one key is required")
 	}
 
-	return keys, err
+	return keys, nil
 }

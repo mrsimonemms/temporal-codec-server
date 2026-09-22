@@ -14,30 +14,19 @@
  * limitations under the License.
  */
 
-package cmd
+package router
 
 import (
-	"fmt"
-
-	gh "github.com/mrsimonemms/golang-helpers"
-	"github.com/spf13/cobra"
+	"github.com/gofiber/fiber/v3"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
-var (
-	GitCommit = ""
-	Version   = gh.Development
-)
+const loggerKey = "logger"
 
-func newVersionCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "version",
-		Short: "Displays version information",
-		Long: `Print version information.
-
-The output includes the version number and Git commit hash used to build the
-binary, which can be helpful for debugging and support purposes.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("Version: %s\nGit commit: %s\n", Version, GitCommit)
-		},
+func GetLogger(c fiber.Ctx) zerolog.Logger {
+	if l, ok := c.Locals(loggerKey).(zerolog.Logger); ok {
+		return l
 	}
+	return log.Logger // fallback to global logger
 }

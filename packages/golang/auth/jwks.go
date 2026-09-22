@@ -53,7 +53,7 @@ func cachedHTTPGet(url string) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("jwks response not ok: %w", err)
+		return nil, fmt.Errorf("jwks response not ok")
 	}
 
 	body, err = io.ReadAll(resp.Body)
@@ -74,6 +74,10 @@ func JWKS(token, jwksURL string) error {
 	}
 
 	k, err := keyfunc.NewJWKSetJSON(body)
+	if err != nil {
+		return fmt.Errorf("error parsing jwks: %w", err)
+	}
+
 	t, err := jwt.Parse(token, k.Keyfunc)
 	if err != nil {
 		return fmt.Errorf("error parsing jwt keys: %w", err)

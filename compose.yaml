@@ -7,10 +7,65 @@ services:
       args:
         APP: golang
     environment:
-      CORS_ORIGINS: http://localhost:8233
-      KEYS_PATH: /go/root/keys.example.yaml
+      CONFIG_PATH: /go/root/config.example.yaml
+      SERVER_DISABLE_AUTH: true
+      SERVER_DISABLE_CORS: true
+      ENCRYPTION_KEYS_PATH: /keys.yaml
     ports:
       - 3000:3000
     restart: on-failure
+    # Weird dependency tree, but allows to just start codec server by language
+    depends_on:
+      temporal:
+        condition: service_healthy
+      worker_encryption:
+        condition: service_started
     volumes:
+      - ./config.example.yaml:/go/root/config.example.yaml
       - ./apps:/go/root/apps
+      - ./keys.example.yaml:/keys.yaml
+
+  trigger_encryption:
+    build:
+      context: ./dev/workflows
+    environment:
+      CONVERTER_KEY_PATH: /keys.yaml
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_NAMESPACE: default
+    working_dir: /go/app/encryption
+    depends_on:
+      temporal:
+        condition: service_healthy
+    volumes:
+      - ./dev/workflows/encryption:/go/app/encryption
+      - ./keys.example.yaml:/keys.yaml
+
+  ########################
+  # Third-party services #
+  ########################
+  temporal:
+    image: temporalio/temporal
+    ports:
+      - 8080:8233
+    command: server start-dev --ip 0.0.0.0 --ui-codec-endpoint http://localhost:3000
+    healthcheck:
+      test: ["CMD-SHELL", "temporal operator cluster health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  worker_encryption:
+    image: ghcr.io/zigflow/zigflow
+    environment:
+      CONVERT_DATA: aes
+      CONVERTER_KEY_PATH: /keys.yaml
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_NAMESPACE: default
+    depends_on:
+      temporal:
+        condition: service_healthy
+    command:
+      - run
+    volumes:
+      - ./dev/workflows/encryption/workflow.yaml:/app/workflow.yaml
+      - ./keys.example.yaml:/keys.yaml
