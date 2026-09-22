@@ -147,6 +147,33 @@ func TestDecode_UnknownEncryptionKey(t *testing.T) {
 	assert.Contains(t, res.body, "unknown encryption key")
 }
 
+// A payload that claims our encoding but carries too few bytes to hold a GCM
+// nonce must be a decode failure, not a 200 with the payloads missing.
+//
+// Regression: the AES codec used to return (nil, nil) here, which the SDK
+// handler marshalled as an empty envelope. The caller got 200 {} and its
+// payloads silently vanished; the SDK's remote codec then failed with
+// "received 0 payloads from remote codec, expected 2".
+func TestDecode_ShortCiphertextIsAnError(t *testing.T) {
+	app := newAESApp(t)
+
+	malformed := &commonpb.Payload{
+		Metadata: map[string][]byte{
+			converter.MetadataEncoding: []byte(aes.AESMimeType),
+			aes.MetadataKeyID:          []byte("key0"),
+		},
+		// Eight bytes, under the 12-byte AES-GCM nonce.
+		Data: []byte("tooshort"),
+	}
+	encoded := encodeForTest(t, plainPayload(t, "sibling"))
+
+	res := post(t, app, pathDecode, payloadsJSON(t, malformed, encoded[0]))
+
+	require.Equal(t, http.StatusBadRequest, res.status, res.body)
+	assert.Contains(t, res.body, "shorter than")
+	assert.NotEqual(t, "{}\n", res.body, "the payloads must not be dropped silently")
+}
+
 func TestDecode_MalformedRequests(t *testing.T) {
 	tests := []struct {
 		name string

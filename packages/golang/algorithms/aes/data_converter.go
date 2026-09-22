@@ -73,7 +73,7 @@ func (c *codec) Decode(payloads []*common.Payload) ([]*common.Payload, error) {
 
 		nonceSize := gcm.NonceSize()
 		if len(ciphertext) < nonceSize {
-			return nil, err
+			return nil, fmt.Errorf("ciphertext is shorter than the nonce: %d < %d", len(ciphertext), nonceSize)
 		}
 
 		nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
